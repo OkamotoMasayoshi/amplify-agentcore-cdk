@@ -1,10 +1,43 @@
 # 必要なライブラリをインポート
 from strands import Agent
-from strands_tools import rss
+from strands_tools.rss import rss
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
 # AgentCoreランタイム用のAPIサーバーを作成
 app = BedrockAgentCoreApp()
+
+
+def convert_event(event) -> dict | None:
+    """Strandsのイベントをフロントエンド向けJSON形式に変換"""
+    try:
+        if not hasattr(event, 'get'):
+            return None
+
+        inner_event = event.get('event')
+        if not inner_event:
+            return None
+
+        # テキストデルタ
+        content_block_delta = inner_event.get('contentBlockDelta')
+        if content_block_delta:
+            delta = content_block_delta.get('delta', {})
+            text = delta.get('text')
+            if text:
+                return {'type': 'text', 'data': text}
+
+        # ツール使用開始
+        content_block_start = inner_event.get('contentBlockStart')
+        if content_block_start:
+            start = content_block_start.get('start', {})
+            tool_use = start.get('toolUse')
+            if tool_use:
+                tool_name = tool_use.get('name', 'unknown')
+                return {'type': 'tool_use', 'tool_name': tool_name}
+
+        return None
+    except Exception:
+        return None
+
 
 # エージェント呼び出し関数を、APIサーバーのエントリーポイントに設定
 @app.entrypoint
@@ -21,9 +54,11 @@ async def invoke_agent(payload, context):
     )
 
     # エージェントの応答をストリーミングで取得
-    stream = agent.stream_async(prompt)
-    async for event in stream:
-        yield event
+    async for event in agent.stream_async(prompt):
+        converted = convert_event(event)
+        if converted:
+            yield converted
+
 
 # APIサーバーを起動
 app.run()
