@@ -26,7 +26,8 @@ export function createAgentCoreRuntime(
   const runtime = new agentcore.Runtime(stack, 'UpdateCheckerRuntime', {
     runtimeName: 'update_checker',
     agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(
-      agentImage.repository
+      agentImage.repository,
+      agentImage.imageTag
     ),
     authorizerConfiguration: agentcore.RuntimeAuthorizerConfiguration.usingCognito(
       userPool,

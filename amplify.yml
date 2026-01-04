@@ -11,10 +11,6 @@ backend:
 # フロントエンドのビルド設定
 frontend:
   phases:
-    preBuild:
-      commands:
-        # Amplify Consoleの環境変数を.envに書き出す
-        - echo "VITE_AGENT_ARN=$VITE_AGENT_ARN" >> .env
     build:
       commands:
         - npm run build
