@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 WORKDIR /app
 
-# All environment variables in one layer
+# 環境変数
 ENV UV_SYSTEM_PYTHON=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_NO_PROGRESS=1 \
@@ -10,32 +10,23 @@ ENV UV_SYSTEM_PYTHON=1 \
     AWS_REGION=ap-northeast-1 \
     AWS_DEFAULT_REGION=ap-northeast-1
 
-
-
+# 依存関係のインストール
 COPY requirements.txt requirements.txt
-# Install from requirements file
 RUN uv pip install -r requirements.txt
-
-
-
-
 RUN uv pip install aws-opentelemetry-distro==0.12.2
 
-
-# Signal that this is running in Docker for host binding logic
-ENV DOCKER_CONTAINER=1
-
-# Create non-root user
+# 非rootユーザー作成
 RUN useradd -m -u 1000 bedrock_agentcore
 USER bedrock_agentcore
 
-EXPOSE 9000
-EXPOSE 8000
 EXPOSE 8080
+EXPOSE 8000
 
-# Copy entire project (respecting .dockerignore)
+# アプリケーションコードをコピー
 COPY . .
 
-# Use the full module path
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/ping || exit 1
 
-CMD ["opentelemetry-instrument", "python", "-m", "main"]
+CMD ["opentelemetry-instrument", "python", "-m", "app"]

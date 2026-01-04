@@ -1,8 +1,0 @@
-# AWSアップデート検索AIエージェント
-
-## 技術スタック
-
-- フロントエンド： Vite + React on Amplify Gen2
-- バックエンド： Bedrock AgentCore Runtime
-  - インバウンドJWT認証
-  - AgentCore Starter Toolkitとマネコンで構築
