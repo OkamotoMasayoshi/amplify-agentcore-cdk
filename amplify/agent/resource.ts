@@ -26,6 +26,7 @@ export function createAgentCoreRuntime(
       agentImage.repository,
       agentImage.imageTag
     ),
+    // AgentCore Identityでインバウンド認証を設定
     authorizerConfiguration: agentcore.RuntimeAuthorizerConfiguration.usingCognito(
       userPool,
       [userPoolClient],
