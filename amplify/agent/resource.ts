@@ -7,9 +7,6 @@ import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-// ESMでは__dirnameが使えないため、import.meta.urlから取得
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 // AgentCore Runtimeを作成
 export function createAgentCoreRuntime(
   stack: Stack,
@@ -18,7 +15,7 @@ export function createAgentCoreRuntime(
 ) {
   // CodeBuildでARM64イメージをビルド
   const agentImage = new ContainerImageBuild(stack, 'AgentImage', {
-    directory: __dirname,
+    directory: path.dirname(fileURLToPath(import.meta.url)),
     platform: Platform.LINUX_ARM64,
   });
 
