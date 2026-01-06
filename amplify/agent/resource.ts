@@ -7,7 +7,6 @@ import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-// AgentCore Runtimeを作成
 export function createAgentCoreRuntime(
   stack: Stack,
   userPool: IUserPool,
@@ -19,7 +18,7 @@ export function createAgentCoreRuntime(
     platform: Platform.LINUX_ARM64,
   });
 
-  // AgentCore Runtime
+  // AgentCoreランタイムを作成
   const runtime = new agentcore.Runtime(stack, 'UpdateCheckerRuntime', {
     runtimeName: `update_checker_${stack.stackName.split('-')[2]}`,
     agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(
@@ -33,10 +32,13 @@ export function createAgentCoreRuntime(
     networkConfiguration: agentcore.RuntimeNetworkConfiguration.usingPublicNetwork(),
   });
 
-  // Bedrockモデル呼び出し権限
+  // Bedrock APIの利用権限を追加
   runtime.addToRolePolicy(
     new iam.PolicyStatement({
-      actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+      actions: [
+        'bedrock:InvokeModel',
+        'bedrock:InvokeModelWithResponseStream'
+      ],
       resources: [
         'arn:aws:bedrock:*::foundation-model/*',
         'arn:aws:bedrock:*:*:inference-profile/*',
