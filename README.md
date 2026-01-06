@@ -2,12 +2,12 @@
 
 AWSの最新機能をフルに生かした、フルスタックのAIエージェントWebアプリを簡単にデプロイできます。
 
-![画面イメージ](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/1633856/109a3b02-b137-49e9-9b37-2dfc49481a4e.png)
-
-特徴
+### 特徴
 
 - フルサーバーレスなので維持費激安。ほぼLLMのAPI料金のみで運用できます。
 - エンプラReadyなセキュリティ。Cognito認証付き、東京リージョン対応。WAFでIP制限もできます。
+
+![画面イメージ](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/1633856/109a3b02-b137-49e9-9b37-2dfc49481a4e.png)
 
 
 ### アーキテクチャ
