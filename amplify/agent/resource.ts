@@ -21,7 +21,7 @@ export function createAgentCoreRuntime(
 
   // AgentCore Runtime
   const runtime = new agentcore.Runtime(stack, 'UpdateCheckerRuntime', {
-    runtimeName: `update_checker_${stack.node.addr.substring(0, 8)}`,
+    runtimeName: `update_checker_${stack.stackName.split('-')[2]}`,
     agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(
       agentImage.repository,
       agentImage.imageTag
