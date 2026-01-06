@@ -7,8 +7,10 @@ const backend = defineBackend({
   auth,
 });
 
-// AgentCore Runtimeを作成
+// AgentCore用のCDKスタックを作成
 const agentCoreStack = backend.createStack('AgentCoreStack');
+
+// AgentCoreランタイムのリソースを作成
 const { runtime } = createAgentCoreRuntime(
   agentCoreStack,
   backend.auth.resources.userPool,

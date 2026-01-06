@@ -7,18 +7,19 @@ import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
+// 指定されたCDKスタックに、AgentCoreランタイム関連のリソース一式を作成する関数
 export function createAgentCoreRuntime(
   stack: Stack,
   userPool: IUserPool,
   userPoolClient: IUserPoolClient
 ) {
-  // CodeBuildでARM64イメージをビルド
+  // CodeBuildでARM64イメージをビルド（deploy-time-buildを利用）
   const agentImage = new ContainerImageBuild(stack, 'AgentImage', {
     directory: path.dirname(fileURLToPath(import.meta.url)),
     platform: Platform.LINUX_ARM64,
   });
 
-  // AgentCoreランタイムを作成
+  // AgentCoreランタイムを作成（L2コンストラクト利用）
   const runtime = new agentcore.Runtime(stack, 'UpdateCheckerRuntime', {
     runtimeName: `update_checker_${stack.stackName.split('-')[2]}`,
     agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(
