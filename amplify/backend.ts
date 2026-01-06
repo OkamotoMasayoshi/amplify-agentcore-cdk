@@ -2,7 +2,7 @@ import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { createAgentCoreRuntime } from './agent/resource';
 
-// Amplifyバックエンドを定義
+// Amplify標準バックエンドのうち、認証機能を利用
 const backend = defineBackend({
   auth,
 });
