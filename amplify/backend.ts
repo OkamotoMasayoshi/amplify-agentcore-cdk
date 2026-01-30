@@ -27,7 +27,10 @@ backend.addOutput({
 });
 
 // WAF設定（IP制限）
-const wafStack = backend.createStack('WAFStack');
+// CloudFront用WAFはus-east-1リージョンでのみ作成可能
+const wafStack = backend.createStack('WAFStack', {
+  env: { region: 'us-east-1' },
+});
 
 // 許可するIPアドレスのリスト（CIDR形式）
 const allowedIPs = [
