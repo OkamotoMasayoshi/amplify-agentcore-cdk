@@ -4,9 +4,18 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 import outputs from '../amplify_outputs.json';
+import { getAuthUrl } from './entraidConfig';
 
 // Amplify outputs から設定を取得
 const AGENT_ARN = outputs.custom?.agentRuntimeArn;
+
+// Entra IDユーザー情報の型
+interface EntraidUser {
+  name: string;
+  email: string;
+  department?: string;
+  jobTitle?: string;
+}
 
 // チャットメッセージの型定義
 interface Message {
@@ -23,7 +32,22 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [entraidUser, setEntraidUser] = useState<EntraidUser | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Entra IDユーザー情報を読み込み
+  useEffect(() => {
+    const userStr = localStorage.getItem('entraidUser');
+    if (userStr) {
+      setEntraidUser(JSON.parse(userStr));
+    }
+  }, []);
+
+  // ログアウト処理
+  const handleLogout = () => {
+    localStorage.removeItem('entraidUser');
+    setEntraidUser(null);
+  };
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
@@ -129,6 +153,16 @@ function App() {
       <header className="header">
         <h1 className="title">フルサーバーレスなAIエージェントアプリ</h1>
         <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
+        <div className="user-info">
+          {entraidUser ? (
+            <>
+              <span>{entraidUser.name} ({entraidUser.department || entraidUser.jobTitle || entraidUser.email})</span>
+              <button onClick={handleLogout} className="logout-btn">ログアウト</button>
+            </>
+          ) : (
+            <a href={getAuthUrl()} className="login-btn">Entra ID ログイン</a>
+          )}
+        </div>
       </header>
 
       <div className="message-area">

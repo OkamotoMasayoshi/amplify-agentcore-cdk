@@ -22,7 +22,12 @@ AWSの最新機能をフルに生かした、フルスタックのAIエージェ
 ### デプロイ手順
 
 1. このリポジトリを自分のGitHubアカウントにフォーク
-2. Amplify Gen2にリポジトリのURLを登録
+2. `.env`ファイルを作成してEntra ID設定を追加（`.env.example`を参考）
+3. Amplify Gen2にリポジトリのURLを登録
+4. Amplifyコンソールで環境変数を設定
+   - `VITE_ENTRAID_CLIENT_ID`
+   - `VITE_ENTRAID_TENANT_ID`
+   - `VITE_REDIRECT_URI`
 
 → これだけで自動的にフロントエンド＆バックエンドがデプロイされます。
 
