@@ -16,8 +16,8 @@ const apiStack = backend.createStack('EntraidApiStack');
 const httpApi = new HttpApi(apiStack, 'EntraidHttpApi', {
   corsPreflight: {
     allowOrigins: ['*'],
-    allowMethods: [CorsHttpMethod.POST],
-    allowHeaders: ['Content-Type'],
+    allowMethods: [CorsHttpMethod.POST, CorsHttpMethod.OPTIONS],
+    allowHeaders: ['*'],
   },
 });
 
