@@ -16,6 +16,7 @@ exports.handler = async (event) => {
   const REDIRECT_URI = process.env.REDIRECT_URI;
 
   try {
+    console.log('Token request started');
     // トークン取得
     const tokenData = await makeRequest({
       hostname: 'login.microsoftonline.com',
@@ -30,6 +31,7 @@ exports.handler = async (event) => {
       grant_type: 'authorization_code',
     }).toString());
 
+    console.log('Token received');
     const token = JSON.parse(tokenData);
 
     // ユーザー情報取得
@@ -40,6 +42,7 @@ exports.handler = async (event) => {
       headers: { 'Authorization': `Bearer ${token.access_token}` },
     });
 
+    console.log('User data received');
     const user = JSON.parse(userData);
 
     return {
