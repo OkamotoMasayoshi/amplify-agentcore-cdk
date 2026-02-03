@@ -47,7 +47,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 },
               }}
             >
-              {({ signOut, user }) => <App />}
+              <App />
             </Authenticator>
           }
         />
