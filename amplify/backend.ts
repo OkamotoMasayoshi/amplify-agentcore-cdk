@@ -39,7 +39,7 @@ const identityPool = new CfnIdentityPool(apiStack, 'EntraidIdentityPool', {
   allowUnauthenticatedIdentities: false,
   openIdConnectProviderArns: [],
   supportedLoginProviders: {
-    [`login.microsoftonline.com/${process.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: process.env.VITE_ENTRAID_CLIENT_ID!,
+    'sts.windows.net': process.env.VITE_ENTRAID_CLIENT_ID!,
   },
 });
 

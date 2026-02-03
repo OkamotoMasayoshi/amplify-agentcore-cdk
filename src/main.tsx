@@ -24,7 +24,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AuthCallback />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route
           path="/*"
           element={

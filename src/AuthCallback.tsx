@@ -45,23 +45,30 @@ export default function AuthCallback() {
         // Cognito Identity PoolでAWS認証情報取得
         const cognitoClient = new CognitoIdentityClient({ region: REGION });
         
+        console.log('Identity Pool ID:', IDENTITY_POOL_ID);
+        console.log('ID Token:', data.id_token);
+        
         const getIdResponse = await cognitoClient.send(
           new GetIdCommand({
             IdentityPoolId: IDENTITY_POOL_ID,
             Logins: {
-              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
+              'sts.windows.net': data.id_token,
             },
           })
         );
+
+        console.log('Identity ID:', getIdResponse.IdentityId);
 
         const credsResponse = await cognitoClient.send(
           new GetCredentialsForIdentityCommand({
             IdentityId: getIdResponse.IdentityId,
             Logins: {
-              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
+              'sts.windows.net': data.id_token,
             },
           })
         );
+
+        console.log('AWS Credentials:', credsResponse.Credentials);
 
         // セッション保存
         localStorage.setItem('entraidUser', JSON.stringify(data.user));
@@ -70,6 +77,7 @@ export default function AuthCallback() {
         navigate('/');
       } catch (error) {
         console.error('Auth error:', error);
+        alert(`認証エラー: ${error instanceof Error ? error.message : String(error)}`);
         navigate('/');
       }
     };
