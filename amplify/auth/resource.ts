@@ -1,4 +1,4 @@
-import { defineAuth, secret } from '@aws-amplify/backend';
+import { defineAuth } from '@aws-amplify/backend';
 
 // 認証設定（メールアドレスでログイン + Entra ID OIDC連携）
 export const auth = defineAuth({
@@ -8,8 +8,8 @@ export const auth = defineAuth({
       oidc: [
         {
           name: 'EntraID',
-          clientId: secret('VITE_ENTRAID_CLIENT_ID'),
-          clientSecret: secret('CLIENT_SECRET'),
+          clientId: process.env.VITE_ENTRAID_CLIENT_ID || '',
+          clientSecret: process.env.CLIENT_SECRET || '',
           issuerUrl: `https://login.microsoftonline.com/${process.env.VITE_ENTRAID_TENANT_ID}/v2.0`,
           scopes: ['openid', 'email', 'profile'],
         },
