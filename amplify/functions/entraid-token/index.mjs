@@ -46,6 +46,8 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
+        id_token: token.id_token,
+        access_token: token.access_token,
         user: {
           name: user.displayName,
           email: user.mail,
