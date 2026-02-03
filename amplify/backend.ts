@@ -19,16 +19,34 @@ const api = new apigateway.RestApi(apiStack, 'EntraidApi', {
   defaultCorsPreflightOptions: {
     allowOrigins: apigateway.Cors.ALL_ORIGINS,
     allowMethods: ['POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type'],
+    allowHeaders: ['Content-Type', 'x-api-key'],
   },
 });
 
 const tokenResource = api.root.addResource('token');
 tokenResource.addMethod(
   'POST',
-  new apigateway.LambdaIntegration(backend.entraidToken.resources.lambda),
+  new apigateway.LambdaIntegration(backend.entraidToken.resources.lambda, {
+    proxy: true,
+    integrationResponses: [
+      {
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+        },
+      },
+    ],
+  }),
   {
-    apiKeyRequired: true, // API Key必須
+    apiKeyRequired: true,
+    methodResponses: [
+      {
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+    ],
   }
 );
 
