@@ -24,6 +24,30 @@ const api = new apigateway.RestApi(apiStack, 'EntraidApi', {
 });
 
 const tokenResource = api.root.addResource('token');
+
+// OPTIONSメソッド（CORSプリフライト）
+tokenResource.addMethod('OPTIONS', new apigateway.MockIntegration({
+  integrationResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Headers': "'Content-Type,x-api-key'",
+      'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+      'method.response.header.Access-Control-Allow-Origin': "'*'",
+    },
+  }],
+  requestTemplates: { 'application/json': '{"statusCode": 200}' },
+}), {
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+      'method.response.header.Access-Control-Allow-Origin': true,
+    },
+  }],
+});
+
+// POSTメソッド
 tokenResource.addMethod(
   'POST',
   new apigateway.LambdaIntegration(backend.entraidToken.resources.lambda, {
