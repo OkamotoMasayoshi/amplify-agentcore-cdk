@@ -3,7 +3,6 @@ import { auth } from './auth/resource';
 import { createAgentCoreRuntime } from './agent/resource';
 import { entraidToken } from './functions/entraid-token/resource';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 // Amplify標準バックエンドのうち、認証機能を利用
 const backend = defineBackend({
@@ -50,27 +49,9 @@ tokenResource.addMethod('OPTIONS', new apigateway.MockIntegration({
 // POSTメソッド
 tokenResource.addMethod(
   'POST',
-  new apigateway.LambdaIntegration(backend.entraidToken.resources.lambda, {
-    proxy: true,
-    integrationResponses: [
-      {
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-        },
-      },
-    ],
-  }),
+  new apigateway.LambdaIntegration(backend.entraidToken.resources.lambda),
   {
     apiKeyRequired: true,
-    methodResponses: [
-      {
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      },
-    ],
   }
 );
 
