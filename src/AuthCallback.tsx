@@ -52,7 +52,7 @@ export default function AuthCallback() {
           new GetIdCommand({
             IdentityPoolId: IDENTITY_POOL_ID,
             Logins: {
-              'sts.windows.net': data.id_token,
+              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
             },
           })
         );
@@ -63,7 +63,7 @@ export default function AuthCallback() {
           new GetCredentialsForIdentityCommand({
             IdentityId: getIdResponse.IdentityId,
             Logins: {
-              'sts.windows.net': data.id_token,
+              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
             },
           })
         );
