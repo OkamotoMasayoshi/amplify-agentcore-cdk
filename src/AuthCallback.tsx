@@ -22,7 +22,10 @@ export default function AuthCallback() {
         // Lambdaでトークン交換
         const response = await fetch(LAMBDA_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': import.meta.env.VITE_API_KEY || '',
+          },
           body: JSON.stringify({ code }),
         });
 
