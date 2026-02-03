@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithRedirect } from 'aws-amplify/auth';
 import outputs from '../amplify_outputs.json';
 
 const LAMBDA_URL = outputs.custom?.entraidTokenUrl;
@@ -38,9 +39,11 @@ export default function AuthCallback() {
           return;
         }
 
-        // セッション保存
-        localStorage.setItem('entraidUser', JSON.stringify(data.user));
-        navigate('/');
+        // Entra IDトークンでCognito認証
+        await signInWithRedirect({
+          provider: { custom: 'EntraID' },
+          customState: data.id_token,
+        });
       } catch (error) {
         console.error('Auth error:', error);
         navigate('/');
