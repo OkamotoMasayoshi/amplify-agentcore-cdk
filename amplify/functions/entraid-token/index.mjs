@@ -1,6 +1,6 @@
-const https = require('https');
+import https from 'https';
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   const { code } = JSON.parse(event.body || '{}');
   
   if (!code) {
@@ -17,7 +17,6 @@ exports.handler = async (event) => {
 
   try {
     console.log('Token request started');
-    // トークン取得
     const tokenData = await makeRequest({
       hostname: 'login.microsoftonline.com',
       path: `/${TENANT_ID}/oauth2/v2.0/token`,
@@ -34,7 +33,6 @@ exports.handler = async (event) => {
     console.log('Token received');
     const token = JSON.parse(tokenData);
 
-    // ユーザー情報取得
     const userData = await makeRequest({
       hostname: 'graph.microsoft.com',
       path: '/v1.0/me',

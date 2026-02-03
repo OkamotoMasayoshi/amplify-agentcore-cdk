@@ -2,7 +2,8 @@ import { defineFunction } from '@aws-amplify/backend';
 
 export const entraidToken = defineFunction({
   name: 'entraid-token',
-  entry: './index.js',
+  entry: './index.mjs',
+  runtime: 20,
   timeoutSeconds: 30,
   environment: {
     CLIENT_ID: process.env.CLIENT_ID || '',
