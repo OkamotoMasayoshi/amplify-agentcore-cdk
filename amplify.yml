@@ -22,3 +22,12 @@ frontend:
     paths:
       - .npm/**/*
       - node_modules/**/*
+customHeaders:
+  - pattern: '**'
+    headers:
+      - key: 'Cache-Control'
+        value: 'no-cache'
+  - pattern: '**/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'no-cache'
