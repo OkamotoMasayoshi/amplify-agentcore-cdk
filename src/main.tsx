@@ -19,35 +19,38 @@ Amplify.configure(outputs);
 I18n.putVocabularies(translations);
 I18n.setLanguage('ja');
 
-// アプリケーションのエントリーポイント（認証付きでレンダリング）
+// アプリケーションのエントリーポイント
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/" element={
-          <Authenticator
-            components={{
-              SignIn: {
-                Footer() {
-                  return (
-                    <View textAlign="center" padding="1rem">
-                      <Button
-                        onClick={() => window.location.href = `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/oauth2/v2.0/authorize?client_id=${import.meta.env.VITE_ENTRAID_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)}&scope=${encodeURIComponent('User.Read email profile openid')}&state=aipro-agent-poc&response_mode=query`}
-                        variation="link"
-                        size="small"
-                      >
-                        Entra IDでログイン
-                      </Button>
-                    </View>
-                  );
+        <Route
+          path="/*"
+          element={
+            <Authenticator
+              components={{
+                SignIn: {
+                  Footer() {
+                    return (
+                      <View textAlign="center" padding="1rem">
+                        <Button
+                          onClick={() => window.location.href = `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/oauth2/v2.0/authorize?client_id=${import.meta.env.VITE_ENTRAID_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)}&scope=${encodeURIComponent('User.Read email profile openid')}&state=aipro-agent-poc&response_mode=query`}
+                          variation="link"
+                          size="small"
+                        >
+                          Entra IDでログイン
+                        </Button>
+                      </View>
+                    );
+                  },
                 },
-              },
-            }}
-          >
-            <App />
-          </Authenticator>
-        } />
+              }}
+            >
+              {({ signOut, user }) => <App />}
+            </Authenticator>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
