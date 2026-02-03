@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithRedirect } from 'aws-amplify/auth';
+import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
+import { GetIdCommand, GetCredentialsForIdentityCommand } from '@aws-sdk/client-cognito-identity';
 import outputs from '../amplify_outputs.json';
 
 const LAMBDA_URL = outputs.custom?.entraidTokenUrl;
+const IDENTITY_POOL_ID = (outputs.custom as any)?.identityPoolId;
+const REGION = 'ap-northeast-1';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -39,11 +42,32 @@ export default function AuthCallback() {
           return;
         }
 
-        // Entra IDトークンでCognito認証
-        await signInWithRedirect({
-          provider: { custom: 'EntraID' },
-          customState: data.id_token,
-        });
+        // Cognito Identity PoolでAWS認証情報取得
+        const cognitoClient = new CognitoIdentityClient({ region: REGION });
+        
+        const getIdResponse = await cognitoClient.send(
+          new GetIdCommand({
+            IdentityPoolId: IDENTITY_POOL_ID,
+            Logins: {
+              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
+            },
+          })
+        );
+
+        const credsResponse = await cognitoClient.send(
+          new GetCredentialsForIdentityCommand({
+            IdentityId: getIdResponse.IdentityId,
+            Logins: {
+              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
+            },
+          })
+        );
+
+        // セッション保存
+        localStorage.setItem('entraidUser', JSON.stringify(data.user));
+        localStorage.setItem('awsCredentials', JSON.stringify(credsResponse.Credentials));
+        
+        navigate('/');
       } catch (error) {
         console.error('Auth error:', error);
         navigate('/');
