@@ -1,29 +1,11 @@
 const https = require('https');
 
 exports.handler = async (event) => {
-  // CORS用のヘッダー
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
-    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  };
-
-  // OPTIONSリクエスト（プリフライト）の処理
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
-  }
-
   const { code } = JSON.parse(event.body || '{}');
   
   if (!code) {
     return {
       statusCode: 400,
-      headers,
       body: JSON.stringify({ error: 'code is required' }),
     };
   }
@@ -62,7 +44,6 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers,
       body: JSON.stringify({
         user: {
           name: user.displayName,
@@ -76,7 +57,6 @@ exports.handler = async (event) => {
     console.error('Error:', error);
     return {
       statusCode: 500,
-      headers,
       body: JSON.stringify({ error: error.message }),
     };
   }
