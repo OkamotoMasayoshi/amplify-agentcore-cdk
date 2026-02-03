@@ -1,10 +1,9 @@
 // 必要なパッケージをインポート
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 import outputs from '../amplify_outputs.json';
-import { getAuthUrl } from './entraidConfig';
 
 // Amplify outputs から設定を取得
 const AGENT_ARN = outputs.custom?.agentRuntimeArn;
@@ -47,6 +46,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('entraidUser');
     setEntraidUser(null);
+    signOut();
   };
 
   // メッセージ追加時に自動スクロール
@@ -153,16 +153,12 @@ function App() {
       <header className="header">
         <h1 className="title">フルサーバーレスなAIエージェントアプリ</h1>
         <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
-        <div className="user-info">
-          {entraidUser ? (
-            <>
-              <span>{entraidUser.name} ({entraidUser.department || entraidUser.jobTitle || entraidUser.email})</span>
-              <button onClick={handleLogout} className="logout-btn">ログアウト</button>
-            </>
-          ) : (
-            <a href={getAuthUrl()} className="login-btn">Entra ID ログイン</a>
-          )}
-        </div>
+        {entraidUser && (
+          <div className="user-info">
+            <span>{entraidUser.name} ({entraidUser.department || entraidUser.jobTitle || entraidUser.email})</span>
+            <button onClick={handleLogout} className="logout-btn">ログアウト</button>
+          </div>
+        )}
       </header>
 
       <div className="message-area">

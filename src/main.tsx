@@ -3,7 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Amplify } from "aws-amplify";
-import { Authenticator } from '@aws-amplify/ui-react';
+import { Authenticator, Button, View } from '@aws-amplify/ui-react';
 import { I18n } from 'aws-amplify/utils';
 import { translations } from '@aws-amplify/ui-react';
 import App from "./App.tsx";
@@ -26,7 +26,25 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/" element={
-          <Authenticator>
+          <Authenticator
+            components={{
+              SignIn: {
+                Footer() {
+                  return (
+                    <View textAlign="center" padding="1rem">
+                      <Button
+                        onClick={() => window.location.href = `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/oauth2/v2.0/authorize?client_id=${import.meta.env.VITE_ENTRAID_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)}&scope=${encodeURIComponent('User.Read email profile openid')}&state=aipro-agent-poc&response_mode=query`}
+                        variation="link"
+                        size="small"
+                      >
+                        Entra IDでログイン
+                      </Button>
+                    </View>
+                  );
+                },
+              },
+            }}
+          >
             <App />
           </Authenticator>
         } />
