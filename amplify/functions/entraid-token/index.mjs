@@ -51,7 +51,7 @@ export const handler = async (event) => {
 
     // Cognito User Poolにユーザー作成/更新
     const email = user.mail || user.userPrincipalName;
-    const username = email.replace('@', '_at_');
+    const username = email; // メールアドレスをそのまま使用
 
     try {
       await cognitoClient.send(new AdminCreateUserCommand({
