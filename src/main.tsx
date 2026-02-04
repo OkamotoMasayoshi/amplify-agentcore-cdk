@@ -35,7 +35,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                     return (
                       <View textAlign="center" padding="1rem">
                         <Button
-                          onClick={() => window.location.href = `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_CLIENT_ID}/oauth2/v2.0/authorize?client_id=${import.meta.env.VITE_ENTRAID_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)}&scope=${encodeURIComponent('User.Read email profile openid')}&state=aipro-agent-poc&response_mode=query`}
+                          onClick={() => window.location.href = `https://login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/oauth2/v2.0/authorize?client_id=${import.meta.env.VITE_ENTRAID_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)}&scope=${encodeURIComponent('User.Read email profile openid')}&state=aipro-agent-poc&response_mode=query`}
                           variation="link"
                           size="small"
                         >
