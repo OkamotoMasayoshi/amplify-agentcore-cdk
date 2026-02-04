@@ -37,6 +37,8 @@ export function createAgentCoreGateway(
 
   // Lambda Targetを追加
   gateway.addLambdaTarget('CalendarTools', {
+    gatewayTargetName: 'calendar-tools',
+    description: 'Microsoft Graph Calendar API Tools',
     lambdaFunction: graphCalendarFunction,
     toolSchema: agentcore.ToolSchema.fromInline(toolSchemaJson),
   });
