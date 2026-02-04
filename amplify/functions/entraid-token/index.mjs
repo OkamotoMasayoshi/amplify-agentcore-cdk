@@ -1,4 +1,7 @@
 import https from 'https';
+import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminInitiateAuthCommand } from '@aws-sdk/client-cognito-identity-provider';
+
+const cognitoClient = new CognitoIdentityProviderClient({ region: 'ap-northeast-1' });
 
 export const handler = async (event) => {
   const { code } = JSON.parse(event.body || '{}');
@@ -14,6 +17,8 @@ export const handler = async (event) => {
   const CLIENT_SECRET = process.env.CLIENT_SECRET;
   const TENANT_ID = process.env.TENANT_ID;
   const REDIRECT_URI = process.env.REDIRECT_URI;
+  const USER_POOL_ID = process.env.USER_POOL_ID;
+  const USER_POOL_CLIENT_ID = process.env.USER_POOL_CLIENT_ID;
 
   try {
     console.log('Token request started');
@@ -43,14 +48,56 @@ export const handler = async (event) => {
     console.log('User data received');
     const user = JSON.parse(userData);
 
+    // Cognito User Poolにユーザー作成/更新
+    const email = user.mail || user.userPrincipalName;
+    const username = email.replace('@', '_at_');
+
+    try {
+      await cognitoClient.send(new AdminCreateUserCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: username,
+        UserAttributes: [
+          { Name: 'email', Value: email },
+          { Name: 'email_verified', Value: 'true' },
+          { Name: 'name', Value: user.displayName },
+        ],
+        MessageAction: 'SUPPRESS',
+      }));
+      console.log('User created');
+    } catch (error) {
+      if (error.name !== 'UsernameExistsException') {
+        throw error;
+      }
+      console.log('User already exists');
+    }
+
+    // パスワード設定（ランダム）
+    const tempPassword = Math.random().toString(36).slice(-16) + 'A1!';
+    await cognitoClient.send(new AdminSetUserPasswordCommand({
+      UserPoolId: USER_POOL_ID,
+      Username: username,
+      Password: tempPassword,
+      Permanent: true,
+    }));
+
+    // Cognitoセッショントークン取得
+    const authResult = await cognitoClient.send(new AdminInitiateAuthCommand({
+      UserPoolId: USER_POOL_ID,
+      ClientId: USER_POOL_CLIENT_ID,
+      AuthFlow: 'ADMIN_NO_SRP_AUTH',
+      AuthParameters: {
+        USERNAME: username,
+        PASSWORD: tempPassword,
+      },
+    }));
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        id_token: token.id_token,
-        access_token: token.access_token,
+        cognitoTokens: authResult.AuthenticationResult,
         user: {
           name: user.displayName,
-          email: user.mail,
+          email: email,
           department: user.department,
           jobTitle: user.jobTitle,
         },

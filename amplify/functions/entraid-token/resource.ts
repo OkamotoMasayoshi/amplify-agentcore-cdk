@@ -10,5 +10,7 @@ export const entraidToken = defineFunction({
     CLIENT_SECRET: process.env.CLIENT_SECRET || '',
     TENANT_ID: process.env.TENANT_ID || '',
     REDIRECT_URI: process.env.REDIRECT_URI || '',
+    USER_POOL_ID: process.env.USER_POOL_ID || '',
+    USER_POOL_CLIENT_ID: process.env.USER_POOL_CLIENT_ID || '',
   },
 });

@@ -1,12 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
-import { GetIdCommand, GetCredentialsForIdentityCommand } from '@aws-sdk/client-cognito-identity';
 import outputs from '../amplify_outputs.json';
 
 const LAMBDA_URL = outputs.custom?.entraidTokenUrl;
-const IDENTITY_POOL_ID = (outputs.custom as any)?.identityPoolId;
-const REGION = 'ap-northeast-1';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -23,7 +19,7 @@ export default function AuthCallback() {
       }
 
       try {
-        // Lambdaでトークン交換
+        // LambdaでEntra ID認証 + Cognitoユーザー作成
         const response = await fetch(LAMBDA_URL, {
           method: 'POST',
           headers: {
@@ -42,39 +38,15 @@ export default function AuthCallback() {
           return;
         }
 
-        // Cognito Identity PoolでAWS認証情報取得
-        const cognitoClient = new CognitoIdentityClient({ region: REGION });
+        // CognitoセッションをAmplifyに設定
+        const { cognitoTokens } = data;
         
-        console.log('Identity Pool ID:', IDENTITY_POOL_ID);
-        console.log('ID Token:', data.id_token);
-        
-        const getIdResponse = await cognitoClient.send(
-          new GetIdCommand({
-            IdentityPoolId: IDENTITY_POOL_ID,
-            Logins: {
-              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
-            },
-          })
-        );
-
-        console.log('Identity ID:', getIdResponse.IdentityId);
-
-        const credsResponse = await cognitoClient.send(
-          new GetCredentialsForIdentityCommand({
-            IdentityId: getIdResponse.IdentityId,
-            Logins: {
-              [`login.microsoftonline.com/${import.meta.env.VITE_ENTRAID_TENANT_ID}/v2.0`]: data.id_token,
-            },
-          })
-        );
-
-        console.log('AWS Credentials:', credsResponse.Credentials);
-
         // セッション保存
         localStorage.setItem('entraidUser', JSON.stringify(data.user));
-        localStorage.setItem('awsCredentials', JSON.stringify(credsResponse.Credentials));
+        localStorage.setItem('cognitoTokens', JSON.stringify(cognitoTokens));
         
-        navigate('/');
+        // ページリロードでAmplifyがトークンを読み込む
+        window.location.href = '/';
       } catch (error) {
         console.error('Auth error:', error);
         alert(`認証エラー: ${error instanceof Error ? error.message : String(error)}`);
