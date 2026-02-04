@@ -38,14 +38,21 @@ export default function AuthCallback() {
           return;
         }
 
-        // CognitoセッションをAmplifyに設定
-        const { cognitoTokens } = data;
+        // CognitoトークンをlocalStorageに保存
+        const { cognitoTokens, user } = data;
+        const clientId = outputs.auth.user_pool_client_id;
+        const tokenKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
+        const idTokenKey = `CognitoIdentityServiceProvider.${clientId}.${user.email}.idToken`;
+        const accessTokenKey = `CognitoIdentityServiceProvider.${clientId}.${user.email}.accessToken`;
+        const refreshTokenKey = `CognitoIdentityServiceProvider.${clientId}.${user.email}.refreshToken`;
         
-        // セッション保存
-        localStorage.setItem('entraidUser', JSON.stringify(data.user));
-        localStorage.setItem('cognitoTokens', JSON.stringify(cognitoTokens));
+        localStorage.setItem(tokenKey, user.email);
+        localStorage.setItem(idTokenKey, cognitoTokens.IdToken);
+        localStorage.setItem(accessTokenKey, cognitoTokens.AccessToken);
+        localStorage.setItem(refreshTokenKey, cognitoTokens.RefreshToken);
+        localStorage.setItem('entraidUser', JSON.stringify(user));
         
-        // ページリロードでAmplifyがトークンを読み込む
+        // ページリロードでAmplifyがCognitoセッションを読み込む
         window.location.href = '/';
       } catch (error) {
         console.error('Auth error:', error);
