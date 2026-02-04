@@ -1,0 +1,105 @@
+[
+  {
+    "name": "getCalendar",
+    "description": "指定期間のカレンダー予定を取得します。ユーザーのメールアドレスと期間を指定してください。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "description": "Microsoft Graph APIアクセストークン"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "対象ユーザーのメールアドレス"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "開始日時（ISO 8601形式）例: 2024-12-01T00:00:00Z"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "終了日時（ISO 8601形式）例: 2024-12-31T23:59:59Z"
+        }
+      },
+      "required": ["accessToken", "userEmail", "startDate", "endDate"]
+    }
+  },
+  {
+    "name": "getBusySlots",
+    "description": "複数ユーザーの予約済み時間帯を取得します。業務時間（9-12時、13-17時）のみ抽出されます。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "description": "Microsoft Graph APIアクセストークン"
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "対象ユーザーのメールアドレスリスト"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "開始日時（ISO 8601形式）"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "終了日時（ISO 8601形式）"
+        }
+      },
+      "required": ["accessToken", "emails", "startDate", "endDate"]
+    }
+  },
+  {
+    "name": "createEvent",
+    "description": "カレンダーに予定を登録します。Teams会議を付けることも可能です。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "description": "Microsoft Graph APIアクセストークン"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "予定を作成するユーザーのメールアドレス"
+        },
+        "subject": {
+          "type": "string",
+          "description": "予定のタイトル"
+        },
+        "startDateTime": {
+          "type": "string",
+          "description": "開始日時（ISO 8601形式）"
+        },
+        "endDateTime": {
+          "type": "string",
+          "description": "終了日時（ISO 8601形式）"
+        },
+        "requiredAttendees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "必須参加者のメールアドレスリスト"
+        },
+        "optionalAttendees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "任意参加者のメールアドレスリスト"
+        },
+        "withTeamsMeeting": {
+          "type": "boolean",
+          "description": "Teams会議を付けるかどうか"
+        }
+      },
+      "required": ["accessToken", "userEmail", "subject", "startDateTime", "endDateTime"]
+    }
+  }
+]
