@@ -5,9 +5,6 @@ export const entraidToken = defineFunction({
   entry: './index.mjs',
   runtime: 20,
   timeoutSeconds: 30,
-  bundling: {
-    externalModules: ['@aws-sdk/client-cognito-identity-provider'],
-  },
   environment: {
     CLIENT_ID: process.env.CLIENT_ID || '',
     CLIENT_SECRET: process.env.CLIENT_SECRET || '',
