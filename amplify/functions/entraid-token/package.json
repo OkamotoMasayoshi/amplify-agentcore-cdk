@@ -1,6 +1,8 @@
 {
   "name": "entraid-token",
   "version": "1.0.0",
-  "type": "commonjs",
-  "main": "index.js"
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.0.0"
+  }
 }
