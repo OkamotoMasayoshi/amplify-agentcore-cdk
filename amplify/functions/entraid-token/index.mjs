@@ -1,7 +1,4 @@
 import https from 'https';
-import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminInitiateAuthCommand } from '@aws-sdk/client-cognito-identity-provider';
-
-const cognitoClient = new CognitoIdentityProviderClient({ region: 'ap-northeast-1' });
 
 export const handler = async (event) => {
   const { code } = JSON.parse(event.body || '{}');
@@ -47,6 +44,10 @@ export const handler = async (event) => {
 
     console.log('User data received');
     const user = JSON.parse(userData);
+
+    // Cognito SDKを動的インポート
+    const { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminInitiateAuthCommand } = await import('@aws-sdk/client-cognito-identity-provider');
+    const cognitoClient = new CognitoIdentityProviderClient({ region: 'ap-northeast-1' });
 
     // Cognito User Poolにユーザー作成/更新
     const email = user.mail || user.userPrincipalName;
