@@ -76,7 +76,10 @@ function App() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: userMessage.content }),
+      body: JSON.stringify({ 
+        prompt: userMessage.content,
+        cognitoToken: accessToken 
+      }),
     });
 
     // SSEストリーミングを処理

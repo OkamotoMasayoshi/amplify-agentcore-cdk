@@ -1,7 +1,9 @@
 # 必要なライブラリをインポート
 from strands import Agent
 from strands_tools.rss import rss
+from strands_tools.mcp import mcp_server
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
+import os
 
 # AgentCoreランタイム用のAPIサーバーを作成
 app = BedrockAgentCoreApp()
@@ -45,12 +47,22 @@ async def invoke_agent(payload, context):
 
     # フロントエンドで入力されたプロンプトを取得
     prompt = payload.get("prompt")
+    cognito_token = payload.get("cognitoToken", "")
+    
+    # 環境変数にトークンを設定（MCP呼び出し時に使用）
+    os.environ['COGNITO_TOKEN'] = cognito_token
 
     # AIエージェントを作成
     agent = Agent(
         model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
         system_prompt="aws.amazon.com/about-aws/whats-new/recent/feed からRSSを取得して",
-        tools=[rss]
+        tools=[
+            rss,
+            mcp_server(
+                url="https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp",
+                headers=lambda: {"Authorization": f"Bearer {os.environ.get('COGNITO_TOKEN', '')}"}
+            )
+        ]
     )
 
     # エージェントの応答をストリーミングで取得
