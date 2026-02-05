@@ -223,9 +223,9 @@ function App() {
 
   // チャットUI（サイドバー＋メインエリア）
   return (
-    <div className="container" style={{ display: 'flex', height: '100vh' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* 左サイドバー */}
-      <div style={{ width: '280px', borderRight: '1px solid #e0e0e0', padding: '20px', overflowY: 'auto' }}>
+      <div style={{ width: '280px', borderRight: '1px solid #e0e0e0', padding: '20px', overflowY: 'auto', flexShrink: 0 }}>
         <h2 style={{ fontSize: '18px', marginBottom: '20px' }}>ステータス</h2>
         
         {/* ユーザー情報 */}
