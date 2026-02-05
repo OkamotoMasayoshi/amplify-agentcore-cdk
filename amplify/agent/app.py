@@ -12,15 +12,11 @@ app = BedrockAgentCoreApp()
 def convert_event(event) -> dict | None:
     """Strandsのイベントをフロントエンド向けJSON形式に変換"""
     try:
-        if not hasattr(event, 'get'):
-            return None
-
-        inner_event = event.get('event')
-        if not inner_event:
+        if not isinstance(event, dict):
             return None
 
         # テキスト差分を検知
-        content_block_delta = inner_event.get('contentBlockDelta')
+        content_block_delta = event.get('contentBlockDelta')
         if content_block_delta:
             delta = content_block_delta.get('delta', {})
             text = delta.get('text')
@@ -28,7 +24,7 @@ def convert_event(event) -> dict | None:
                 return {'type': 'text', 'data': text}
 
         # ツール使用開始を検知
-        content_block_start = inner_event.get('contentBlockStart')
+        content_block_start = event.get('contentBlockStart')
         if content_block_start:
             start = content_block_start.get('start', {})
             tool_use = start.get('toolUse')
@@ -68,15 +64,13 @@ async def invoke_agent(payload, context):
     # AIエージェントを作成
     agent = Agent(
         model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
-        system_prompt="aws.amazon.com/about-aws/whats-new/recent/feed からRSSを取得して",
+        system_prompt="あなたは親切なAIアシスタントです。ユーザーの質問に丁寧に答えてください。",
         tools=tools
     )
 
     # エージェントの応答をストリーミングで取得
     async for event in agent.stream_async(prompt):
-        converted = convert_event(event)
-        if converted:
-            yield converted
+        yield event
 
 
 # APIサーバーを起動
