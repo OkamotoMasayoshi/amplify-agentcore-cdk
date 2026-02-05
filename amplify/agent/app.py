@@ -57,6 +57,7 @@ async def invoke_agent(payload, context):
                     headers={"Authorization": f"Bearer {cognito_token}"}
                 )
             mcp_client = MCPClient(create_mcp_transport)
+            await mcp_client.initialize()
             tools.append(mcp_client)
         except Exception as e:
             print(f"MCP Client initialization failed: {e}")
