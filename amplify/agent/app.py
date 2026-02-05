@@ -1,9 +1,14 @@
 # 必要なライブラリをインポート
+import logging
 from strands import Agent
 from strands_tools.rss import rss
 from strands.tools.mcp.mcp_client import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
+
+# ロガー設定
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # AgentCoreランタイム用のAPIサーバーを作成
 app = BedrockAgentCoreApp()
@@ -50,6 +55,7 @@ async def invoke_agent(payload, context):
     
     # Cognitoトークンがある場合のみMCP Clientを追加
     if cognito_token:
+        logger.info(f"Cognito token provided (length: {len(cognito_token)})")
         try:
             def create_mcp_transport():
                 return streamablehttp_client(
@@ -59,13 +65,13 @@ async def invoke_agent(payload, context):
             mcp_client = MCPClient(create_mcp_transport)
             await mcp_client.initialize()
             tools.append(mcp_client)
-            print(f"✓ MCP Client initialized. Total tools: {len(tools)}")
+            logger.info(f"✓ MCP Client initialized. Total tools: {len(tools)}")
         except Exception as e:
-            print(f"✗ MCP Client initialization failed: {e}")
+            logger.error(f"✗ MCP Client initialization failed: {e}", exc_info=True)
     else:
-        print("No Cognito token provided. Using RSS tool only.")
+        logger.info("No Cognito token provided. Using RSS tool only.")
     
-    print(f"Agent tools: {[type(t).__name__ for t in tools]}")
+    logger.info(f"Agent tools: {[type(t).__name__ for t in tools]}")
     
     # AIエージェントを作成
     agent = Agent(
