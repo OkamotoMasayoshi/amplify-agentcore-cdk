@@ -17,6 +17,7 @@ def get_machine_token() -> str:
     client_id = os.environ['MACHINE_CLIENT_ID']
     client_secret = os.environ['MACHINE_CLIENT_SECRET']
     token_url = f"{os.environ['COGNITO_DOMAIN']}/oauth2/token"
+    scope = os.environ.get('COGNITO_SCOPE', 'default-m2m-resource-server-tx0jxc/read')
     
     auth_string = f"{client_id}:{client_secret}"
     auth_b64 = base64.b64encode(auth_string.encode()).decode()
@@ -29,7 +30,7 @@ def get_machine_token() -> str:
         },
         data={
             'grant_type': 'client_credentials',
-            'scope': 'agentcore-gateway/mcp.access'
+            'scope': scope
         }
     )
     
