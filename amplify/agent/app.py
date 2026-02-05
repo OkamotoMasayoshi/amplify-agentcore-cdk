@@ -59,13 +59,18 @@ async def invoke_agent(payload, context):
             mcp_client = MCPClient(create_mcp_transport)
             await mcp_client.initialize()
             tools.append(mcp_client)
+            print(f"✓ MCP Client initialized. Total tools: {len(tools)}")
         except Exception as e:
-            print(f"MCP Client initialization failed: {e}")
+            print(f"✗ MCP Client initialization failed: {e}")
+    else:
+        print("No Cognito token provided. Using RSS tool only.")
+    
+    print(f"Agent tools: {[type(t).__name__ for t in tools]}")
     
     # AIエージェントを作成
     agent = Agent(
         model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
-        system_prompt="あなたは親切なAIアシスタントです。ユーザーの質問に丁寧に答えてください。",
+        system_prompt="あなたは業務支援AIアシスタントです。RSSフィードの管理、カレンダーの確認、メールの操作など、ユーザーの業務をサポートします。",
         tools=tools
     )
 
