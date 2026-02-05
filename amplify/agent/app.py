@@ -61,6 +61,16 @@ async def invoke_agent(payload, context):
         machine_token = get_machine_token()
         gateway_url = os.environ['GATEWAY_URL']
         
+        # トークンの内容をデコードして確認
+        import json
+        token_parts = machine_token.split('.')
+        if len(token_parts) >= 2:
+            # JWTのペイロード部分をデコード（パディング調整）
+            payload = token_parts[1]
+            payload += '=' * (4 - len(payload) % 4)
+            decoded = json.loads(base64.b64decode(payload))
+            yield {'type': 'text', 'data': f'[DEBUG] Token claims: client_id={decoded.get("client_id")}, scope={decoded.get("scope")}'}
+        
         yield {'type': 'text', 'data': f'[DEBUG] Token obtained. Gateway: {gateway_url}'}
         yield {'type': 'text', 'data': '[DEBUG] Initializing MCP Client...'}
         

@@ -1,7 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { createAgentCoreRuntime } from './agent/resource';
-import { createAgentCoreGateway } from './gateway/resource';
+// import { createAgentCoreGateway } from './gateway/resource';
 import { entraidToken } from './functions/entraid-token/resource';
 import { HttpApi, HttpMethod, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
@@ -60,17 +60,16 @@ const { runtime } = createAgentCoreRuntime(
   backend.auth.resources.userPoolClient
 );
 
-// Gateway統合
-const { gateway } = createAgentCoreGateway(
-  agentCoreStack,
-  backend.auth.resources.userPool,
-  backend.auth.resources.userPoolClient
-);
+// Gateway統合はコンソールで作成済み
+// const { gateway } = createAgentCoreGateway(
+//   agentCoreStack,
+//   backend.auth.resources.userPool,
+//   backend.auth.resources.userPoolClient
+// );
 
 backend.addOutput({
   custom: {
     agentRuntimeArn: runtime.agentRuntimeArn,
     entraidTokenUrl: `${httpApi.url}token`,
-    gatewayUrl: gateway.gatewayMcpEndpoint,
   },
 });
