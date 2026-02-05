@@ -63,8 +63,12 @@ async def invoke_agent(payload, context):
                     headers={"Authorization": f"Bearer {cognito_token}"}
                 )
             mcp_client = MCPClient(create_mcp_transport)
-            tools.append(mcp_client)
-            yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
+            
+            # MCP Clientからツールを取得
+            with mcp_client:
+                mcp_tools = mcp_client.list_tools_sync()
+                tools.extend(mcp_tools)
+                yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
         except Exception as e:
             yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
     else:
