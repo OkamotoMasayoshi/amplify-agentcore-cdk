@@ -61,7 +61,9 @@ async def invoke_agent(payload, context):
         machine_token = get_machine_token()
         gateway_url = os.environ['GATEWAY_URL']
         
+        yield {'type': 'text', 'data': f'[DEBUG] Token obtained. Gateway: {gateway_url}'}
         yield {'type': 'text', 'data': '[DEBUG] Initializing MCP Client...'}
+        
         def create_mcp_transport():
             return streamablehttp_client(
                 gateway_url,
@@ -69,12 +71,18 @@ async def invoke_agent(payload, context):
             )
         
         mcp_client = MCPClient(create_mcp_transport)
+        yield {'type': 'text', 'data': '[DEBUG] MCP Client created, entering context...'}
+        
         with mcp_client:
+            yield {'type': 'text', 'data': '[DEBUG] Listing tools...'}
             mcp_tools = mcp_client.list_tools_sync()
             tools.extend(mcp_tools)
             yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
         yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
+        yield {'type': 'text', 'data': f'[ERROR] Traceback: {error_detail}'}
     
     # AIエージェントを作成
     agent = Agent(
