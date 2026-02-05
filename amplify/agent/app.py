@@ -55,7 +55,6 @@ async def invoke_agent(payload, context):
     
     # Cognitoトークンがある場合のみMCP Clientを追加
     if cognito_token:
-        logger.info(f"Cognito token provided (length: {len(cognito_token)})")
         try:
             def create_mcp_transport():
                 return streamablehttp_client(
@@ -65,13 +64,11 @@ async def invoke_agent(payload, context):
             mcp_client = MCPClient(create_mcp_transport)
             await mcp_client.initialize()
             tools.append(mcp_client)
-            logger.info(f"✓ MCP Client initialized. Total tools: {len(tools)}")
+            # 初期化成功をフロントエンドに通知
+            yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
         except Exception as e:
-            logger.error(f"✗ MCP Client initialization failed: {e}", exc_info=True)
-    else:
-        logger.info("No Cognito token provided. Using RSS tool only.")
-    
-    logger.info(f"Agent tools: {[type(t).__name__ for t in tools]}")
+            # エラーをフロントエンドに通知
+            yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
     
     # AIエージェントを作成
     agent = Agent(

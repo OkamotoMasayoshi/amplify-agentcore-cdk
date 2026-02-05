@@ -26,12 +26,27 @@ interface Message {
   toolName?: string;
 }
 
+// ステータス情報の型定義
+interface StatusInfo {
+  cognitoAuth: boolean;
+  entraidAuth: boolean;
+  toolsCount: number;
+  mcpStatus: 'unknown' | 'initializing' | 'ready' | 'failed';
+  mcpError?: string;
+}
+
 // メインのアプリケーションコンポーネント
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [entraidUser, setEntraidUser] = useState<EntraidUser | null>(null);
+  const [status, setStatus] = useState<StatusInfo>({
+    cognitoAuth: false,
+    entraidAuth: false,
+    toolsCount: 1,
+    mcpStatus: 'unknown'
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Entra IDユーザー情報を読み込み
@@ -39,7 +54,21 @@ function App() {
     const userStr = localStorage.getItem('entraidUser');
     if (userStr) {
       setEntraidUser(JSON.parse(userStr));
+      setStatus(prev => ({ ...prev, entraidAuth: true }));
     }
+  }, []);
+
+  // Cognito認証状態を確認
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await fetchAuthSession();
+        setStatus(prev => ({ ...prev, cognitoAuth: !!session.tokens?.accessToken }));
+      } catch {
+        setStatus(prev => ({ ...prev, cognitoAuth: false }));
+      }
+    };
+    checkAuth();
   }, []);
 
   // ログアウト処理
@@ -117,6 +146,23 @@ function App() {
         try {
           event = JSON.parse(data);
           console.log('Received event:', event);
+          
+          // デバッグメッセージを検知してステータス更新
+          if (event.type === 'text' && event.data) {
+            if (event.data.includes('[DEBUG] MCP Client initialized')) {
+              const match = event.data.match(/Tools: (\d+)/);
+              if (match) {
+                setStatus(prev => ({ ...prev, mcpStatus: 'ready', toolsCount: parseInt(match[1]) }));
+              }
+            } else if (event.data.includes('[ERROR] MCP Client failed')) {
+              const errorMatch = event.data.match(/\[ERROR\] MCP Client failed: (.+)/);
+              setStatus(prev => ({ 
+                ...prev, 
+                mcpStatus: 'failed', 
+                mcpError: errorMatch ? errorMatch[1] : 'Unknown error'
+              }));
+            }
+          }
         } catch (e) {
           console.error('Failed to parse event:', data);
           continue;
@@ -171,19 +217,99 @@ function App() {
     setLoading(false);
   };
 
-  // チャットUI（ヘッダー＋チャットエリア＋入力フォーム）
+  // チャットUI（サイドバー＋メインエリア）
   return (
-    <div className="container">
-      <header className="header">
-        <h1 className="title">フルサーバーレスなAIエージェントアプリ</h1>
-        <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
-        {entraidUser && (
-          <div className="user-info">
-            <span>{entraidUser.name} ({entraidUser.department || entraidUser.jobTitle || entraidUser.email})</span>
-            <button onClick={handleLogout} className="logout-btn">ログアウト</button>
+    <div className="container" style={{ display: 'flex', height: '100vh' }}>
+      {/* 左サイドバー */}
+      <div style={{ width: '280px', borderRight: '1px solid #e0e0e0', padding: '20px', overflowY: 'auto' }}>
+        <h2 style={{ fontSize: '18px', marginBottom: '20px' }}>ステータス</h2>
+        
+        {/* ユーザー情報 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ユーザー</h3>
+          {entraidUser ? (
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              <div>{entraidUser.name}</div>
+              <div>{entraidUser.email}</div>
+            </div>
+          ) : (
+            <div style={{ fontSize: '12px', color: '#999' }}>未ログイン</div>
+          )}
+        </div>
+
+        {/* 認証状態 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>認証</h3>
+          <div style={{ fontSize: '12px' }}>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: status.cognitoAuth ? '#4caf50' : '#f44336' }}>●</span>
+              {' '}Cognito: {status.cognitoAuth ? 'OK' : 'NG'}
+            </div>
+            <div>
+              <span style={{ color: status.entraidAuth ? '#4caf50' : '#f44336' }}>●</span>
+              {' '}Entra ID: {status.entraidAuth ? 'OK' : 'NG'}
+            </div>
           </div>
+        </div>
+
+        {/* ツール状態 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ツール</h3>
+          <div style={{ fontSize: '12px' }}>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: '#4caf50' }}>●</span> RSS Feed (常時)
+            </div>
+            <div>
+              <span style={{ 
+                color: status.mcpStatus === 'ready' ? '#4caf50' : 
+                       status.mcpStatus === 'failed' ? '#f44336' : '#999' 
+              }}>●</span>
+              {' '}MCP Client: {
+                status.mcpStatus === 'ready' ? 'OK' :
+                status.mcpStatus === 'failed' ? 'エラー' :
+                status.mcpStatus === 'initializing' ? '初期化中' : '未確認'
+              }
+            </div>
+            {status.mcpError && (
+              <div style={{ fontSize: '11px', color: '#f44336', marginTop: '4px', wordBreak: 'break-word' }}>
+                {status.mcpError}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 合計ツール数 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>利用可能</h3>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1976d2' }}>
+            {status.toolsCount} ツール
+          </div>
+        </div>
+
+        {entraidUser && (
+          <button 
+            onClick={handleLogout} 
+            style={{ 
+              width: '100%', 
+              padding: '8px', 
+              fontSize: '12px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              background: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            ログアウト
+          </button>
         )}
-      </header>
+      </div>
+
+      {/* メインチャットエリア */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <header className="header">
+          <h1 className="title">フルサーバーレスなAIエージェントアプリ</h1>
+          <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
+        </header>
 
       <div className="message-area">
         <div className="message-container">
@@ -207,13 +333,14 @@ function App() {
         </div>
       </div>
 
-      <div className="form-wrapper">
-        <form onSubmit={handleSubmit} className="form">
-          <input value={input} onChange={e => setInput(e.target.value)} placeholder="メッセージを入力..." disabled={loading} className="input" />
-          <button type="submit" disabled={loading || !input.trim()} className="button">
-            {loading ? '⌛️' : '送信'}
-          </button>
-        </form>
+        <div className="form-wrapper">
+          <form onSubmit={handleSubmit} className="form">
+            <input value={input} onChange={e => setInput(e.target.value)} placeholder="メッセージを入力..." disabled={loading} className="input" />
+            <button type="submit" disabled={loading || !input.trim()} className="button">
+              {loading ? '⌛️' : '送信'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
