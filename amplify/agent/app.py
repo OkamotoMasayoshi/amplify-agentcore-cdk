@@ -49,21 +49,27 @@ async def invoke_agent(payload, context):
     prompt = payload.get("prompt")
     cognito_token = payload.get("cognitoToken", "")
     
-    # MCP Gateway接続用のトランスポート作成関数
-    def create_mcp_transport():
-        return streamablehttp_client(
-            "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp",
-            headers={"Authorization": f"Bearer {cognito_token}"}
-        )
+    # ツールリストを作成
+    tools = [rss]
     
-    # MCP Clientを作成
-    mcp_client = MCPClient(create_mcp_transport)
+    # Cognitoトークンがある場合のみMCP Clientを追加
+    if cognito_token:
+        try:
+            def create_mcp_transport():
+                return streamablehttp_client(
+                    "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp",
+                    headers={"Authorization": f"Bearer {cognito_token}"}
+                )
+            mcp_client = MCPClient(create_mcp_transport)
+            tools.append(mcp_client)
+        except Exception as e:
+            print(f"MCP Client initialization failed: {e}")
     
-    # AIエージェントを作成（MCP Gatewayツールを含む）
+    # AIエージェントを作成
     agent = Agent(
         model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
         system_prompt="aws.amazon.com/about-aws/whats-new/recent/feed からRSSを取得して",
-        tools=[rss, mcp_client]
+        tools=tools
     )
 
     # エージェントの応答をストリーミングで取得
