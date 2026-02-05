@@ -72,7 +72,7 @@ async def invoke_agent(payload, context):
     # エージェントの応答をストリーミングで取得
     async for event in agent.stream_async(prompt):
         # AgentResultオブジェクトの場合
-        if hasattr(event, 'result'):
+        if isinstance(event, dict) and 'result' in event:
             result = event['result']
             if hasattr(result, 'message'):
                 message = result.message
