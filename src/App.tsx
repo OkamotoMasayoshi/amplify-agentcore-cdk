@@ -149,7 +149,9 @@ function App() {
           
           // デバッグメッセージを検知してステータス更新
           if (event.type === 'text' && event.data) {
-            if (event.data.includes('[DEBUG] MCP Client initialized')) {
+            if (event.data.includes('[DEBUG] Initializing MCP Client')) {
+              setStatus(prev => ({ ...prev, mcpStatus: 'initializing' }));
+            } else if (event.data.includes('[DEBUG] MCP Client initialized')) {
               const match = event.data.match(/Tools: (\d+)/);
               if (match) {
                 setStatus(prev => ({ ...prev, mcpStatus: 'ready', toolsCount: parseInt(match[1]) }));
@@ -161,6 +163,8 @@ function App() {
                 mcpStatus: 'failed', 
                 mcpError: errorMatch ? errorMatch[1] : 'Unknown error'
               }));
+            } else if (event.data.includes('[DEBUG] No Cognito token')) {
+              setStatus(prev => ({ ...prev, mcpStatus: 'unknown', toolsCount: 1 }));
             }
           }
         } catch (e) {
@@ -311,27 +315,27 @@ function App() {
           <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
         </header>
 
-      <div className="message-area">
-        <div className="message-container">
-          {messages.map(msg => (
-            <div key={msg.id} className={`message-row ${msg.role}`}>
-              <div className={`bubble ${msg.role}`}>
-                {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && (
-                  <span className="thinking">考え中…</span>
-                )}
-                {msg.isToolUsing && (
-                  <span className={`tool-status ${msg.toolCompleted ? 'completed' : 'active'}`}>
-                    {msg.toolCompleted ? '✓' : '⏳'} {msg.toolName}
-                    {msg.toolCompleted ? 'ツールを利用しました' : 'ツールを利用中...'}
-                  </span>
-                )}
-                {msg.content && !msg.isToolUsing && <ReactMarkdown>{msg.content}</ReactMarkdown>}
+        <div className="message-area">
+          <div className="message-container">
+            {messages.map(msg => (
+              <div key={msg.id} className={`message-row ${msg.role}`}>
+                <div className={`bubble ${msg.role}`}>
+                  {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && (
+                    <span className="thinking">考え中…</span>
+                  )}
+                  {msg.isToolUsing && (
+                    <span className={`tool-status ${msg.toolCompleted ? 'completed' : 'active'}`}>
+                      {msg.toolCompleted ? '✓' : '⏳'} {msg.toolName}
+                      {msg.toolCompleted ? 'ツールを利用しました' : 'ツールを利用中...'}
+                    </span>
+                  )}
+                  {msg.content && !msg.isToolUsing && <ReactMarkdown>{msg.content}</ReactMarkdown>}
+                </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
-      </div>
 
         <div className="form-wrapper">
           <form onSubmit={handleSubmit} className="form">
