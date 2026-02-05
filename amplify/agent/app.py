@@ -32,7 +32,16 @@ def get_machine_token() -> str:
             'scope': 'agentcore-gateway/mcp.access'
         }
     )
-    return response.json()['access_token']
+    
+    # レスポンスのデバッグ情報を追加
+    if response.status_code != 200:
+        raise Exception(f"Token request failed: {response.status_code} - {response.text}")
+    
+    response_data = response.json()
+    if 'access_token' not in response_data:
+        raise Exception(f"No access_token in response: {response_data}")
+    
+    return response_data['access_token']
 
 
 # エージェント呼び出し関数を、APIサーバーのエントリーポイントに設定
