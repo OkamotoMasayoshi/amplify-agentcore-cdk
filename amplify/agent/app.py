@@ -71,7 +71,18 @@ async def invoke_agent(payload, context):
 
     # エージェントの応答をストリーミングで取得
     async for event in agent.stream_async(prompt):
-        yield event
+        # AgentResultオブジェクトの場合
+        if hasattr(event, 'result'):
+            result = event['result']
+            if hasattr(result, 'message'):
+                message = result.message
+                if isinstance(message, dict) and 'content' in message:
+                    for content in message['content']:
+                        if isinstance(content, dict) and 'text' in content:
+                            yield {'type': 'text', 'data': content['text']}
+        # 通常のイベントの場合
+        elif isinstance(event, dict):
+            yield event
 
 
 # APIサーバーを起動
