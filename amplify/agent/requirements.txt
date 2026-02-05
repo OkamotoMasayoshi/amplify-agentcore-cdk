@@ -1,5 +1,6 @@
 botocore
 bedrock-agentcore
+requests
 
 strands-agents
 strands-agents[otel]

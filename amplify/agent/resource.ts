@@ -53,5 +53,13 @@ export function createAgentCoreRuntime(
     })
   );
 
+  // Cognito権限を追加
+  runtime.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ['cognito-idp:DescribeUserPoolClient'],
+      resources: [userPool.userPoolArn],
+    })
+  );
+
   return { runtime };
 }

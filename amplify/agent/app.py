@@ -1,45 +1,38 @@
 # 必要なライブラリをインポート
-import logging
+import os
+import base64
+import requests
 from strands import Agent
 from strands_tools.rss import rss
 from strands.tools.mcp.mcp_client import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
-# ロガー設定
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
 # AgentCoreランタイム用のAPIサーバーを作成
 app = BedrockAgentCoreApp()
 
 
-def convert_event(event) -> dict | None:
-    """Strandsのイベントをフロントエンド向けJSON形式に変換"""
-    try:
-        if not isinstance(event, dict):
-            return None
-
-        # テキスト差分を検知
-        content_block_delta = event.get('contentBlockDelta')
-        if content_block_delta:
-            delta = content_block_delta.get('delta', {})
-            text = delta.get('text')
-            if text:
-                return {'type': 'text', 'data': text}
-
-        # ツール使用開始を検知
-        content_block_start = event.get('contentBlockStart')
-        if content_block_start:
-            start = content_block_start.get('start', {})
-            tool_use = start.get('toolUse')
-            if tool_use:
-                tool_name = tool_use.get('name', 'unknown')
-                return {'type': 'tool_use', 'tool_name': tool_name}
-
-        return None
-    except Exception:
-        return None
+def get_machine_token() -> str:
+    """クライアントクレデンシャルフローでトークン取得"""
+    client_id = os.environ['MACHINE_CLIENT_ID']
+    client_secret = os.environ['MACHINE_CLIENT_SECRET']
+    token_url = f"{os.environ['COGNITO_DOMAIN']}/oauth2/token"
+    
+    auth_string = f"{client_id}:{client_secret}"
+    auth_b64 = base64.b64encode(auth_string.encode()).decode()
+    
+    response = requests.post(
+        token_url,
+        headers={
+            'Authorization': f'Basic {auth_b64}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data={
+            'grant_type': 'client_credentials',
+            'scope': 'agentcore-gateway/mcp.access'
+        }
+    )
+    return response.json()['access_token']
 
 
 # エージェント呼び出し関数を、APIサーバーのエントリーポイントに設定
@@ -48,31 +41,30 @@ async def invoke_agent(payload, context):
 
     # フロントエンドで入力されたプロンプトを取得
     prompt = payload.get("prompt")
-    cognito_token = payload.get("cognitoToken", "")
     
     # ツールリストを作成
     tools = [rss]
     
-    # Cognitoトークンがある場合のみMCP Clientを追加
-    if cognito_token:
+    # マシントークンでMCP Client初期化
+    try:
+        yield {'type': 'text', 'data': '[DEBUG] Getting machine token...'}
+        machine_token = get_machine_token()
+        gateway_url = os.environ['GATEWAY_URL']
+        
         yield {'type': 'text', 'data': '[DEBUG] Initializing MCP Client...'}
-        try:
-            def create_mcp_transport():
-                return streamablehttp_client(
-                    "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp",
-                    headers={"Authorization": f"Bearer {cognito_token}"}
-                )
-            mcp_client = MCPClient(create_mcp_transport)
-            
-            # MCP Clientからツールを取得
-            with mcp_client:
-                mcp_tools = mcp_client.list_tools_sync()
-                tools.extend(mcp_tools)
-                yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
-        except Exception as e:
-            yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
-    else:
-        yield {'type': 'text', 'data': '[DEBUG] No Cognito token. Using RSS only.'}
+        def create_mcp_transport():
+            return streamablehttp_client(
+                gateway_url,
+                headers={"Authorization": f"Bearer {machine_token}"}
+            )
+        
+        mcp_client = MCPClient(create_mcp_transport)
+        with mcp_client:
+            mcp_tools = mcp_client.list_tools_sync()
+            tools.extend(mcp_tools)
+            yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
+    except Exception as e:
+        yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
     
     # AIエージェントを作成
     agent = Agent(

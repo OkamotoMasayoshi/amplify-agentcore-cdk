@@ -8,7 +8,11 @@ ENV UV_SYSTEM_PYTHON=1 \
     PYTHONUNBUFFERED=1 \
     DOCKER_CONTAINER=1 \
     AWS_REGION=ap-northeast-1 \
-    AWS_DEFAULT_REGION=ap-northeast-1
+    AWS_DEFAULT_REGION=ap-northeast-1 \
+    MACHINE_CLIENT_ID=c6vlmdfobi25hpj7f48nnac7k \
+    MACHINE_CLIENT_SECRET=vsjpjjq2nprj2dka22hiaguvrtui98ismcfglu6rq1j1abrvn50 \
+    COGNITO_DOMAIN=https://amplify-agentcore.auth.ap-northeast-1.amazoncognito.com \
+    GATEWAY_URL=https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp
 
 # 依存関係のインストール
 COPY requirements.txt requirements.txt
