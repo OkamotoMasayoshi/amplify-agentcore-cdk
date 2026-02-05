@@ -73,6 +73,9 @@ function App() {
 
     // AgentCore Runtime APIを呼び出し
     const url = `https://bedrock-agentcore.ap-northeast-1.amazonaws.com/runtimes/${encodeURIComponent(AGENT_ARN)}/invocations?qualifier=DEFAULT`;
+    console.log('Calling AgentCore:', url);
+    console.log('Payload:', { prompt: userMessage.content });
+    
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -81,6 +84,16 @@ function App() {
         cognitoToken: accessToken
       }),
     });
+    
+    console.log('Response status:', res.status);
+    console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('API Error:', errorText);
+      setLoading(false);
+      return;
+    }
 
     // SSEストリーミングを処理
     const reader = res.body!.getReader();
@@ -99,7 +112,15 @@ function App() {
         if (!line.startsWith('data: ')) continue;
         const data = line.slice(6);
         if (data === '[DONE]') continue;
-        const event = JSON.parse(data);
+        
+        let event;
+        try {
+          event = JSON.parse(data);
+          console.log('Received event:', event);
+        } catch (e) {
+          console.error('Failed to parse event:', data);
+          continue;
+        }
 
         // ツール使用開始イベント
         if (event.type === 'tool_use') {
