@@ -78,7 +78,7 @@ function App() {
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         prompt: userMessage.content,
-        cognitoToken: accessToken 
+        cognitoToken: accessToken
       }),
     });
 
