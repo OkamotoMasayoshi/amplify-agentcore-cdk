@@ -233,37 +233,37 @@ function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* 左サイドバー */}
-      <div style={{ width: '280px', borderRight: '1px solid #e0e0e0', padding: '20px', overflowY: 'auto', flexShrink: 0 }}>
-        <h2 style={{ fontSize: '18px', marginBottom: '20px' }}>ステータス</h2>
+      <div style={{ width: '280px', borderRight: '1px solid #2d2d2d', padding: '20px', overflowY: 'auto', flexShrink: 0, background: '#1a1a1a' }}>
+        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#e0e0e0' }}>ステータス</h2>
         
         {/* ユーザー情報 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ユーザー</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>ユーザー</h3>
           {entraidUser ? (
-            <div style={{ fontSize: '12px', color: '#666' }}>
+            <div style={{ fontSize: '12px', color: '#a0a0a0' }}>
               <div>{entraidUser.name}</div>
               <div>{entraidUser.email}</div>
               {entraidUser.userPrincipalName && (
-                <div style={{ marginTop: '4px', fontSize: '11px', color: '#999' }}>
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#808080' }}>
                   {entraidUser.userPrincipalName}
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ fontSize: '12px', color: '#999' }}>未ログイン</div>
+            <div style={{ fontSize: '12px', color: '#808080' }}>未ログイン</div>
           )}
         </div>
 
         {/* 認証状態 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>認証</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>認証</h3>
           <div style={{ fontSize: '12px' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: status.cognitoAuth ? '#4caf50' : '#f44336' }}>●</span>
+              <span style={{ color: status.cognitoAuth ? '#60a060' : '#c04040' }}>●</span>
               {' '}Cognito: {status.cognitoAuth ? 'OK' : 'NG'}
             </div>
             <div>
-              <span style={{ color: status.entraidAuth ? '#4caf50' : '#f44336' }}>●</span>
+              <span style={{ color: status.entraidAuth ? '#60a060' : '#c04040' }}>●</span>
               {' '}Entra ID: {status.entraidAuth ? 'OK' : 'NG'}
             </div>
           </div>
@@ -271,15 +271,15 @@ function App() {
 
         {/* ツール状態 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>ツール</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>ツール</h3>
           <div style={{ fontSize: '12px' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#4caf50' }}>●</span> RSS Feed (常時)
+              <span style={{ color: '#60a060' }}>●</span> RSS Feed (常時)
             </div>
             <div>
               <span style={{ 
-                color: status.mcpStatus === 'ready' ? '#4caf50' : 
-                       status.mcpStatus === 'failed' ? '#f44336' : '#999' 
+                color: status.mcpStatus === 'ready' ? '#60a060' : 
+                       status.mcpStatus === 'failed' ? '#c04040' : '#808080' 
               }}>●</span>
               {' '}MCP Client: {
                 status.mcpStatus === 'ready' ? 'OK' :
@@ -288,7 +288,7 @@ function App() {
               }
             </div>
             {status.mcpError && (
-              <div style={{ fontSize: '11px', color: '#f44336', marginTop: '4px', wordBreak: 'break-word' }}>
+              <div style={{ fontSize: '11px', color: '#c04040', marginTop: '4px', wordBreak: 'break-word' }}>
                 {status.mcpError}
               </div>
             )}
@@ -297,14 +297,14 @@ function App() {
 
         {/* 必須パラメータ */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Graph API</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>Graph API</h3>
           <div style={{ fontSize: '12px' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: entraidUser?.accessToken ? '#4caf50' : '#f44336' }}>●</span>
+              <span style={{ color: entraidUser?.accessToken ? '#60a060' : '#c04040' }}>●</span>
               {' '}トークン: {entraidUser?.accessToken ? 'OK' : 'NG'}
             </div>
             <div>
-              <span style={{ color: entraidUser?.email ? '#4caf50' : '#f44336' }}>●</span>
+              <span style={{ color: entraidUser?.email ? '#60a060' : '#c04040' }}>●</span>
               {' '}メール: {entraidUser?.email ? 'OK' : 'NG'}
             </div>
           </div>
@@ -312,8 +312,8 @@ function App() {
 
         {/* 合計ツール数 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>利用可能</h3>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1976d2' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>利用可能</h3>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#a0a0a0' }}>
             {status.toolsCount} ツール
           </div>
         </div>
@@ -325,9 +325,10 @@ function App() {
               width: '100%', 
               padding: '8px', 
               fontSize: '12px',
-              border: '1px solid #ccc',
+              border: '1px solid #2d2d2d',
               borderRadius: '4px',
-              background: 'white',
+              background: '#0a0a0a',
+              color: '#e0e0e0',
               cursor: 'pointer'
             }}
           >
@@ -339,8 +340,7 @@ function App() {
       {/* メインチャットエリア */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header className="header">
-          <h1 className="title">フルサーバーレスなAIエージェントアプリ</h1>
-          <p className="subtitle">AmplifyとAgentCoreで構築しています</p>
+          <h1 className="title">カレンダー調整＋RSS収集エージェント</h1>
         </header>
 
         <div className="message-area">
@@ -348,8 +348,8 @@ function App() {
             {messages.map(msg => (
               <div key={msg.id} className={`message-row ${msg.role}`}>
                 <div className={`bubble ${msg.role}`}>
-                  {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && (
-                    <span className="thinking">考え中…</span>
+                  {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && loading && (
+                    <span className="thinking">処理中...</span>
                   )}
                   {msg.isToolUsing && (
                     <span className={`tool-status ${msg.toolCompleted ? 'completed' : 'active'}`}>

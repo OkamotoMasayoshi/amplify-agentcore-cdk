@@ -60,9 +60,15 @@ async def invoke_agent(payload, context):
     # システムプロンプトを構築
     system_prompt = "あなたは業務支援AIアシスタントです。RSSフィードの管理、カレンダーの確認、メールの操作など、ユーザーの業務をサポートします。"
     
-    # 現在時刻情報を追加
+    # 現在時刻情報を追加（ローカル時刻に変換）
     if current_datetime and timezone:
-        system_prompt += f"\n\n現在時刻情報:\n- 日時: {current_datetime}\n- タイムゾーン: {timezone}\n日時に関する質問には、この情報を基準にして回答してください。"
+        from datetime import datetime
+        import pytz
+        utc_time = datetime.fromisoformat(current_datetime.replace('Z', '+00:00'))
+        local_tz = pytz.timezone(timezone)
+        local_time = utc_time.astimezone(local_tz)
+        formatted_time = local_time.strftime('%Y年%m月%d日（%a） %H時%M分%S秒')
+        system_prompt += f"\n\n現在時刻情報:\n- 日時: {formatted_time}\n- タイムゾーン: {timezone}\n日時に関する質問には、この情報を基準にして回答してください。"
     
     # Graph APIパラメータを追加
     if graph_access_token and user_email:
@@ -100,16 +106,22 @@ async def invoke_agent(payload, context):
             
             # エージェントの応答をストリーミングで取得
             async for event in agent.stream_async(prompt):
-                if isinstance(event, dict) and 'result' in event:
-                    result = event['result']
-                    if hasattr(result, 'message'):
-                        message = result.message
-                        if isinstance(message, dict) and 'content' in message:
-                            for content in message['content']:
-                                if isinstance(content, dict) and 'text' in content:
-                                    yield {'type': 'text', 'data': content['text']}
-                elif isinstance(event, dict):
-                    yield event
+                if isinstance(event, dict):
+                    # ツール使用イベントのみ通知
+                    if event.get('type') == 'tool_use':
+                        yield event
+                    # テキストイベントは常に出力
+                    elif event.get('type') == 'text':
+                        yield event
+                    # result内のテキストを抽出
+                    elif 'result' in event:
+                        result = event['result']
+                        if hasattr(result, 'message'):
+                            message = result.message
+                            if isinstance(message, dict) and 'content' in message:
+                                for content in message['content']:
+                                    if isinstance(content, dict) and 'text' in content:
+                                        yield {'type': 'text', 'data': content['text']}
                     
     except Exception as e:
         import traceback
