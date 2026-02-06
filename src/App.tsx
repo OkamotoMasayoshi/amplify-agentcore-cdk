@@ -14,7 +14,8 @@ interface EntraidUser {
   email: string;
   department?: string;
   jobTitle?: string;
-  accessToken?: string; // Graph API用トークン
+  accessToken?: string;
+  userPrincipalName?: string;
 }
 
 // チャットメッセージの型定義
@@ -113,7 +114,8 @@ function App() {
         prompt: userMessage.content,
         cognitoToken: accessToken,
         graphAccessToken: entraidUser?.accessToken,
-        userEmail: entraidUser?.email
+        userEmail: entraidUser?.email,
+        userPrincipalName: entraidUser?.userPrincipalName
       }),
     });
     
@@ -238,6 +240,11 @@ function App() {
             <div style={{ fontSize: '12px', color: '#666' }}>
               <div>{entraidUser.name}</div>
               <div>{entraidUser.email}</div>
+              {entraidUser.userPrincipalName && (
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#999' }}>
+                  {entraidUser.userPrincipalName}
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ fontSize: '12px', color: '#999' }}>未ログイン</div>
