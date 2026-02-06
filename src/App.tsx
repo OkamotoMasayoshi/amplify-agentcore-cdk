@@ -148,7 +148,7 @@ function App() {
         let event;
         try {
           event = JSON.parse(data);
-          console.log('Received event:', event);
+          // console.log('Received event:', event); // デバッグログをコメントアウト
           
           // デバッグメッセージを検知してステータス更新
           if (event.type === 'text' && event.data) {
