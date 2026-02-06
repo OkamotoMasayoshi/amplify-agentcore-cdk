@@ -68,17 +68,7 @@ async def invoke_agent(payload, context):
         machine_token = get_machine_token()
         gateway_url = "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp"
         
-        # トークンの内容をデコードして確認
-        import json
-        token_parts = machine_token.split('.')
-        if len(token_parts) >= 2:
-            # JWTのペイロード部分をデコード（パディング調整）
-            payload = token_parts[1]
-            payload += '=' * (4 - len(payload) % 4)
-            decoded = json.loads(base64.b64decode(payload))
-            yield {'type': 'text', 'data': f'[DEBUG] Token claims: client_id={decoded.get("client_id")}, scope={decoded.get("scope")}'}
-        
-        yield {'type': 'text', 'data': f'[DEBUG] Token obtained. Gateway: {gateway_url}'}
+        yield {'type': 'text', 'data': f'[DEBUG] Gateway: {gateway_url}'}
         yield {'type': 'text', 'data': '[DEBUG] Initializing MCP Client...'}
         
         def create_mcp_transport():
@@ -88,40 +78,38 @@ async def invoke_agent(payload, context):
             )
         
         mcp_client = MCPClient(create_mcp_transport)
-        yield {'type': 'text', 'data': '[DEBUG] MCP Client created, entering context...'}
         
+        # MCP Clientのコンテキスト内でAgentを実行
         with mcp_client:
-            yield {'type': 'text', 'data': '[DEBUG] Listing tools...'}
             mcp_tools = mcp_client.list_tools_sync()
             tools.extend(mcp_tools)
-            yield {'type': 'text', 'data': f'[DEBUG] MCP Client initialized. Tools: {len(tools)}'}
+            yield {'type': 'text', 'data': f'[DEBUG] MCP Tools: {len(mcp_tools)}'}
+            
+            # AIエージェントを作成
+            agent = Agent(
+                model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
+                system_prompt=system_prompt,
+                tools=tools
+            )
+            
+            # エージェントの応答をストリーミングで取得
+            async for event in agent.stream_async(prompt):
+                if isinstance(event, dict) and 'result' in event:
+                    result = event['result']
+                    if hasattr(result, 'message'):
+                        message = result.message
+                        if isinstance(message, dict) and 'content' in message:
+                            for content in message['content']:
+                                if isinstance(content, dict) and 'text' in content:
+                                    yield {'type': 'text', 'data': content['text']}
+                elif isinstance(event, dict):
+                    yield event
+                    
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
-        yield {'type': 'text', 'data': f'[ERROR] MCP Client failed: {str(e)}'}
+        yield {'type': 'text', 'data': f'[ERROR] Failed: {str(e)}'}
         yield {'type': 'text', 'data': f'[ERROR] Traceback: {error_detail}'}
-    
-    # AIエージェントを作成
-    agent = Agent(
-        model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
-        system_prompt=system_prompt,
-        tools=tools
-    )
-
-    # エージェントの応答をストリーミングで取得
-    async for event in agent.stream_async(prompt):
-        # AgentResultオブジェクトの場合
-        if isinstance(event, dict) and 'result' in event:
-            result = event['result']
-            if hasattr(result, 'message'):
-                message = result.message
-                if isinstance(message, dict) and 'content' in message:
-                    for content in message['content']:
-                        if isinstance(content, dict) and 'text' in content:
-                            yield {'type': 'text', 'data': content['text']}
-        # 通常のイベントの場合
-        elif isinstance(event, dict):
-            yield event
 
 
 # APIサーバーを起動
