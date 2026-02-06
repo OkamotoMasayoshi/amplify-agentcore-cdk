@@ -107,6 +107,7 @@ function App() {
     console.log('Calling AgentCore:', url);
     console.log('Payload:', { prompt: userMessage.content });
     
+    const now = new Date();
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -115,7 +116,9 @@ function App() {
         cognitoToken: accessToken,
         graphAccessToken: entraidUser?.accessToken,
         userEmail: entraidUser?.email,
-        userPrincipalName: entraidUser?.userPrincipalName
+        userPrincipalName: entraidUser?.userPrincipalName,
+        currentDateTime: now.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       }),
     });
     

@@ -53,23 +53,30 @@ async def invoke_agent(payload, context):
     prompt = payload.get("prompt")
     graph_access_token = payload.get("graphAccessToken")
     user_email = payload.get("userEmail")
+    user_principal_name = payload.get("userPrincipalName")
+    current_datetime = payload.get("currentDateTime")
+    timezone = payload.get("timezone")
     
-    # Graph APIパラメータをシステムプロンプトに追加
+    # システムプロンプトを構築
     system_prompt = "あなたは業務支援AIアシスタントです。RSSフィードの管理、カレンダーの確認、メールの操作など、ユーザーの業務をサポートします。"
+    
+    # 現在時刻情報を追加
+    if current_datetime and timezone:
+        system_prompt += f"\n\n現在時刻情報:\n- 日時: {current_datetime}\n- タイムゾーン: {timezone}\n日時に関する質問には、この情報を基準にして回答してください。"
+    
+    # Graph APIパラメータを追加
     if graph_access_token and user_email:
         system_prompt += f"\n\n重要: カレンダーツールを使用する際は、以下のパラメータを自動的に使用してください:\naccessToken: {graph_access_token}\nuserEmail: {user_email}"
+        if user_principal_name:
+            system_prompt += f"\nuserPrincipalName: {user_principal_name}"
     
     # ツールリストを作成
     tools = [rss]
     
     # マシントークンでMCP Client初期化
     try:
-        yield {'type': 'text', 'data': '[DEBUG] Getting machine token...'}
         machine_token = get_machine_token()
         gateway_url = "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp"
-        
-        yield {'type': 'text', 'data': f'[DEBUG] Gateway: {gateway_url}'}
-        yield {'type': 'text', 'data': '[DEBUG] Initializing MCP Client...'}
         
         def create_mcp_transport():
             return streamablehttp_client(
@@ -83,7 +90,6 @@ async def invoke_agent(payload, context):
         with mcp_client:
             mcp_tools = mcp_client.list_tools_sync()
             tools.extend(mcp_tools)
-            yield {'type': 'text', 'data': f'[DEBUG] MCP Tools: {len(mcp_tools)}'}
             
             # AIエージェントを作成
             agent = Agent(
