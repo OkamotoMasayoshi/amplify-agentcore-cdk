@@ -16,8 +16,8 @@ def get_machine_token() -> str:
     """クライアントクレデンシャルフローでトークン取得"""
     client_id = os.environ['MACHINE_CLIENT_ID']
     client_secret = os.environ['MACHINE_CLIENT_SECRET']
-    token_url = f"{os.environ['COGNITO_DOMAIN']}/oauth2/token"
-    scope = os.environ.get('COGNITO_SCOPE', 'default-m2m-resource-server-tx0jxc/read')
+    token_url = "https://amplify-agentcore.auth.ap-northeast-1.amazoncognito.com/oauth2/token"
+    scope = "agentcore-gateway/mcp.access"
     
     auth_string = f"{client_id}:{client_secret}"
     auth_b64 = base64.b64encode(auth_string.encode()).decode()
@@ -59,7 +59,7 @@ async def invoke_agent(payload, context):
     try:
         yield {'type': 'text', 'data': '[DEBUG] Getting machine token...'}
         machine_token = get_machine_token()
-        gateway_url = os.environ['GATEWAY_URL']
+        gateway_url = "https://graph-calendar-gateway-8ddbslrixp.gateway.bedrock-agentcore.ap-northeast-1.amazonaws.com/mcp"
         
         # トークンの内容をデコードして確認
         import json

@@ -32,3 +32,13 @@ amplifyconfiguration*
 # env
 .env
 .env.local
+
+# test scripts
+test-*.ps1
+test-*.py
+test-*.mjs
+check-*.ps1
+check-*.py
+verify-*.ps1
+debug-*.py
+AWS_RESOURCE_REPORT.md
