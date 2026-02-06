@@ -101,6 +101,7 @@ export const handler = async (event) => {
           email: email,
           department: user.department,
           jobTitle: user.jobTitle,
+          accessToken: token.access_token, // Graph APIトークンを追加
         },
       }),
     };

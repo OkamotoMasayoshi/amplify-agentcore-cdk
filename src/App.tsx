@@ -14,6 +14,7 @@ interface EntraidUser {
   email: string;
   department?: string;
   jobTitle?: string;
+  accessToken?: string; // Graph API用トークン
 }
 
 // チャットメッセージの型定義
@@ -110,7 +111,9 @@ function App() {
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         prompt: userMessage.content,
-        cognitoToken: accessToken
+        cognitoToken: accessToken,
+        graphAccessToken: entraidUser?.accessToken,
+        userEmail: entraidUser?.email
       }),
     });
     
@@ -279,6 +282,21 @@ function App() {
                 {status.mcpError}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* 必須パラメータ */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Graph API</h3>
+          <div style={{ fontSize: '12px' }}>
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ color: entraidUser?.accessToken ? '#4caf50' : '#f44336' }}>●</span>
+              {' '}トークン: {entraidUser?.accessToken ? 'OK' : 'NG'}
+            </div>
+            <div>
+              <span style={{ color: entraidUser?.email ? '#4caf50' : '#f44336' }}>●</span>
+              {' '}メール: {entraidUser?.email ? 'OK' : 'NG'}
+            </div>
           </div>
         </div>
 

@@ -51,6 +51,13 @@ async def invoke_agent(payload, context):
 
     # フロントエンドで入力されたプロンプトを取得
     prompt = payload.get("prompt")
+    graph_access_token = payload.get("graphAccessToken")
+    user_email = payload.get("userEmail")
+    
+    # Graph APIパラメータをシステムプロンプトに追加
+    system_prompt = "あなたは業務支援AIアシスタントです。RSSフィードの管理、カレンダーの確認、メールの操作など、ユーザーの業務をサポートします。"
+    if graph_access_token and user_email:
+        system_prompt += f"\n\n重要: カレンダーツールを使用する際は、以下のパラメータを自動的に使用してください:\naccessToken: {graph_access_token}\nuserEmail: {user_email}"
     
     # ツールリストを作成
     tools = [rss]
@@ -97,7 +104,7 @@ async def invoke_agent(payload, context):
     # AIエージェントを作成
     agent = Agent(
         model="jp.anthropic.claude-haiku-4-5-20251001-v1:0",
-        system_prompt="あなたは業務支援AIアシスタントです。RSSフィードの管理、カレンダーの確認、メールの操作など、ユーザーの業務をサポートします。",
+        system_prompt=system_prompt,
         tools=tools
     )
 
