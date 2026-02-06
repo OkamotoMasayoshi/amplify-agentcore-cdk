@@ -26,6 +26,7 @@ interface Message {
   isToolUsing?: boolean;
   toolCompleted?: boolean;
   toolName?: string;
+  isThinking?: boolean;
 }
 
 // ステータス情報の型定義
@@ -153,30 +154,21 @@ function App() {
         let event;
         try {
           event = JSON.parse(data);
-          // console.log('Received event:', event); // デバッグログをコメントアウト
-          
-          // デバッグメッセージを検知してステータス更新
-          if (event.type === 'text' && event.data) {
-            if (event.data.includes('[DEBUG] Initializing MCP Client')) {
-              setStatus(prev => ({ ...prev, mcpStatus: 'initializing' }));
-            } else if (event.data.includes('[DEBUG] MCP Client initialized')) {
-              const match = event.data.match(/Tools: (\d+)/);
-              if (match) {
-                setStatus(prev => ({ ...prev, mcpStatus: 'ready', toolsCount: parseInt(match[1]) }));
-              }
-            } else if (event.data.includes('[ERROR] MCP Client failed')) {
-              const errorMatch = event.data.match(/\[ERROR\] MCP Client failed: (.+)/);
-              setStatus(prev => ({ 
-                ...prev, 
-                mcpStatus: 'failed', 
-                mcpError: errorMatch ? errorMatch[1] : 'Unknown error'
-              }));
-            } else if (event.data.includes('[DEBUG] No Cognito token')) {
-              setStatus(prev => ({ ...prev, mcpStatus: 'unknown', toolsCount: 1 }));
-            }
-          }
         } catch (e) {
           console.error('Failed to parse event:', data);
+          continue;
+        }
+
+        // 思考過程イベント（thinking）
+        if (event.type === 'thinking' && event.data) {
+          setMessages(prev => {
+            const msgs = [...prev];
+            const lastMsg = msgs[msgs.length - 1];
+            if (lastMsg.role === 'assistant' && !lastMsg.content) {
+              msgs[msgs.length - 1] = { ...lastMsg, content: event.data, isThinking: true };
+            }
+            return msgs;
+          });
           continue;
         }
 
@@ -186,6 +178,11 @@ function App() {
           const savedBuffer = buffer;
           setMessages(prev => {
             const msgs = [...prev];
+            const lastMsg = msgs[msgs.length - 1];
+            // 思考中メッセージをクリア
+            if (lastMsg.isThinking) {
+              msgs[msgs.length - 1] = { ...lastMsg, content: '', isThinking: false };
+            }
             if (savedBuffer) {
               msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: savedBuffer };
               toolIdx = msgs.length;
@@ -219,7 +216,9 @@ function App() {
             buffer += event.data;
             setMessages(prev => {
               const msgs = [...prev];
-              msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: buffer, isToolUsing: false };
+              const lastMsg = msgs[msgs.length - 1];
+              // 思考中メッセージをクリアして本文を表示
+              msgs[msgs.length - 1] = { ...lastMsg, content: buffer, isToolUsing: false, isThinking: false };
               return msgs;
             });
           }
@@ -233,37 +232,37 @@ function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* 左サイドバー */}
-      <div style={{ width: '280px', borderRight: '1px solid #2d2d2d', padding: '20px', overflowY: 'auto', flexShrink: 0, background: '#1a1a1a' }}>
-        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#e0e0e0' }}>ステータス</h2>
+      <div style={{ width: '280px', borderRight: '1px solid #3d5266', padding: '20px', overflowY: 'auto', flexShrink: 0, background: '#232f3e' }}>
+        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#ffffff' }}>ステータス</h2>
         
         {/* ユーザー情報 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>ユーザー</h3>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#ffffff' }}>ユーザー</h3>
           {entraidUser ? (
-            <div style={{ fontSize: '12px', color: '#a0a0a0' }}>
+            <div style={{ fontSize: '12px', color: '#aab7b8' }}>
               <div>{entraidUser.name}</div>
               <div>{entraidUser.email}</div>
               {entraidUser.userPrincipalName && (
-                <div style={{ marginTop: '4px', fontSize: '11px', color: '#808080' }}>
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#879596' }}>
                   {entraidUser.userPrincipalName}
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ fontSize: '12px', color: '#808080' }}>未ログイン</div>
+            <div style={{ fontSize: '12px', color: '#879596' }}>未ログイン</div>
           )}
         </div>
 
         {/* 認証状態 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>認証</h3>
-          <div style={{ fontSize: '12px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#ffffff' }}>認証</h3>
+          <div style={{ fontSize: '12px', color: '#aab7b8' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: status.cognitoAuth ? '#60a060' : '#c04040' }}>●</span>
+              <span style={{ color: status.cognitoAuth ? '#1d8102' : '#d13212' }}>●</span>
               {' '}Cognito: {status.cognitoAuth ? 'OK' : 'NG'}
             </div>
             <div>
-              <span style={{ color: status.entraidAuth ? '#60a060' : '#c04040' }}>●</span>
+              <span style={{ color: status.entraidAuth ? '#1d8102' : '#d13212' }}>●</span>
               {' '}Entra ID: {status.entraidAuth ? 'OK' : 'NG'}
             </div>
           </div>
@@ -271,15 +270,15 @@ function App() {
 
         {/* ツール状態 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>ツール</h3>
-          <div style={{ fontSize: '12px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#ffffff' }}>ツール</h3>
+          <div style={{ fontSize: '12px', color: '#aab7b8' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#60a060' }}>●</span> RSS Feed (常時)
+              <span style={{ color: '#1d8102' }}>●</span> RSS Feed (常時)
             </div>
             <div>
               <span style={{ 
-                color: status.mcpStatus === 'ready' ? '#60a060' : 
-                       status.mcpStatus === 'failed' ? '#c04040' : '#808080' 
+                color: status.mcpStatus === 'ready' ? '#1d8102' : 
+                       status.mcpStatus === 'failed' ? '#d13212' : '#879596' 
               }}>●</span>
               {' '}MCP Client: {
                 status.mcpStatus === 'ready' ? 'OK' :
@@ -288,7 +287,7 @@ function App() {
               }
             </div>
             {status.mcpError && (
-              <div style={{ fontSize: '11px', color: '#c04040', marginTop: '4px', wordBreak: 'break-word' }}>
+              <div style={{ fontSize: '11px', color: '#d13212', marginTop: '4px', wordBreak: 'break-word' }}>
                 {status.mcpError}
               </div>
             )}
@@ -297,14 +296,14 @@ function App() {
 
         {/* 必須パラメータ */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>Graph API</h3>
-          <div style={{ fontSize: '12px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#ffffff' }}>Graph API</h3>
+          <div style={{ fontSize: '12px', color: '#aab7b8' }}>
             <div style={{ marginBottom: '4px' }}>
-              <span style={{ color: entraidUser?.accessToken ? '#60a060' : '#c04040' }}>●</span>
+              <span style={{ color: entraidUser?.accessToken ? '#1d8102' : '#d13212' }}>●</span>
               {' '}トークン: {entraidUser?.accessToken ? 'OK' : 'NG'}
             </div>
             <div>
-              <span style={{ color: entraidUser?.email ? '#60a060' : '#c04040' }}>●</span>
+              <span style={{ color: entraidUser?.email ? '#1d8102' : '#d13212' }}>●</span>
               {' '}メール: {entraidUser?.email ? 'OK' : 'NG'}
             </div>
           </div>
@@ -312,8 +311,8 @@ function App() {
 
         {/* 合計ツール数 */}
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#c0c0c0' }}>利用可能</h3>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#a0a0a0' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#ffffff' }}>利用可能</h3>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ff9900' }}>
             {status.toolsCount} ツール
           </div>
         </div>
@@ -325,10 +324,10 @@ function App() {
               width: '100%', 
               padding: '8px', 
               fontSize: '12px',
-              border: '1px solid #2d2d2d',
+              border: '1px solid #3d5266',
               borderRadius: '4px',
-              background: '#0a0a0a',
-              color: '#e0e0e0',
+              background: '#16191f',
+              color: '#ffffff',
               cursor: 'pointer'
             }}
           >
@@ -348,8 +347,11 @@ function App() {
             {messages.map(msg => (
               <div key={msg.id} className={`message-row ${msg.role}`}>
                 <div className={`bubble ${msg.role}`}>
-                  {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && loading && (
+                  {msg.role === 'assistant' && !msg.content && !msg.isToolUsing && !msg.isThinking && loading && (
                     <span className="thinking">処理中...</span>
+                  )}
+                  {msg.isThinking && msg.content && (
+                    <span className="thinking-progress">{msg.content}</span>
                   )}
                   {msg.isToolUsing && (
                     <span className={`tool-status ${msg.toolCompleted ? 'completed' : 'active'}`}>

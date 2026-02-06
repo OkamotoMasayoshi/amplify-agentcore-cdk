@@ -2,6 +2,9 @@
 import os
 import base64
 import requests
+import re
+from datetime import datetime
+import pytz
 from strands import Agent
 from strands_tools.rss import rss
 from strands.tools.mcp.mcp_client import MCPClient
@@ -45,6 +48,32 @@ def get_machine_token() -> str:
     return response_data['access_token']
 
 
+def convert_utc_to_local(text: str, timezone_str: str) -> str:
+    """テキスト内のUTC時刻をローカル時刻に変換"""
+    if not timezone_str:
+        return text
+    
+    try:
+        local_tz = pytz.timezone(timezone_str)
+        
+        # ISO 8601形式のUTC時刻を検出して変換 (例: 2026-02-06T07:47:42Z)
+        def replace_iso_utc(match):
+            utc_str = match.group(0)
+            try:
+                utc_time = datetime.fromisoformat(utc_str.replace('Z', '+00:00'))
+                local_time = utc_time.astimezone(local_tz)
+                return local_time.strftime('%Y年%m月%d日（%a） %H時%M分%S秒')
+            except:
+                return utc_str
+        
+        # ISO 8601形式のパターンをマッチ
+        text = re.sub(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z', replace_iso_utc, text)
+        
+        return text
+    except:
+        return text
+
+
 # エージェント呼び出し関数を、APIサーバーのエントリーポイントに設定
 @app.entrypoint
 async def invoke_agent(payload, context):
@@ -62,13 +91,11 @@ async def invoke_agent(payload, context):
     
     # 現在時刻情報を追加（ローカル時刻に変換）
     if current_datetime and timezone:
-        from datetime import datetime
-        import pytz
         utc_time = datetime.fromisoformat(current_datetime.replace('Z', '+00:00'))
         local_tz = pytz.timezone(timezone)
         local_time = utc_time.astimezone(local_tz)
         formatted_time = local_time.strftime('%Y年%m月%d日（%a） %H時%M分%S秒')
-        system_prompt += f"\n\n現在時刻情報:\n- 日時: {formatted_time}\n- タイムゾーン: {timezone}\n日時に関する質問には、この情報を基準にして回答してください。"
+        system_prompt += f"\n\n現在時刻情報:\n- 日時: {formatted_time}\n- タイムゾーン: {timezone}\n日時に関する質問には、この情報を基準にして回答してください。\n\n重要: カレンダーやその他のツールから返される日時は、必ず{timezone}のローカル時刻に変換して表示してください。"
     
     # Graph APIパラメータを追加
     if graph_access_token and user_email:
@@ -107,13 +134,19 @@ async def invoke_agent(payload, context):
             # エージェントの応答をストリーミングで取得
             async for event in agent.stream_async(prompt):
                 if isinstance(event, dict):
-                    # ツール使用イベントのみ通知
+                    # ツール使用イベント
                     if event.get('type') == 'tool_use':
                         yield event
-                    # テキストイベントは常に出力
+                    # 思考過程イベント（thinking）
+                    elif event.get('type') == 'thinking':
+                        yield {'type': 'thinking', 'data': event.get('data', '')}
+                    # テキストイベント（UTC時刻を変換）
                     elif event.get('type') == 'text':
-                        yield event
-                    # result内のテキストを抽出
+                        text_data = event.get('data', '')
+                        if text_data and timezone:
+                            text_data = convert_utc_to_local(text_data, timezone)
+                        yield {'type': 'text', 'data': text_data}
+                    # result内のテキストを抽出（UTC時刻を変換）
                     elif 'result' in event:
                         result = event['result']
                         if hasattr(result, 'message'):
@@ -121,7 +154,10 @@ async def invoke_agent(payload, context):
                             if isinstance(message, dict) and 'content' in message:
                                 for content in message['content']:
                                     if isinstance(content, dict) and 'text' in content:
-                                        yield {'type': 'text', 'data': content['text']}
+                                        text_data = content['text']
+                                        if timezone:
+                                            text_data = convert_utc_to_local(text_data, timezone)
+                                        yield {'type': 'text', 'data': text_data}
                     
     except Exception as e:
         import traceback

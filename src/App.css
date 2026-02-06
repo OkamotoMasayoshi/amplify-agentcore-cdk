@@ -1,10 +1,10 @@
 /* タイトルバー */
 .header {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  color: #e0e0e0;
+  background: #232f3e;
+  color: #ffffff;
   text-align: center;
   padding: 20px 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
 }
 .title { font-size: 1.3rem; font-weight: 600; margin: 0; letter-spacing: 0.5px; }
@@ -20,10 +20,10 @@
 }
 .login-btn, .logout-btn {
   background: rgba(255, 255, 255, 0.1);
-  color: #e0e0e0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 6px 16px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   text-decoration: none;
   font-size: 0.85rem;
@@ -38,7 +38,7 @@
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background: #0a0a0a;
+  background: #16191f;
 }
 
 /* メッセージ表示エリア */
@@ -48,7 +48,7 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  background: #0a0a0a;
+  background: #16191f;
 }
 
 .message-container {
@@ -69,33 +69,34 @@
 .bubble {
   max-width: 80%;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   line-height: 1.5;
   font-size: 0.95rem;
 }
 .bubble.user {
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-  color: #e0e0e0;
-  border: 1px solid #404040;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: #2e4057;
+  color: #ffffff;
+  border: 1px solid #3d5266;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 .bubble.assistant {
-  background: #1a1a1a;
-  color: #d0d0d0;
-  border: 1px solid #2d2d2d;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background: #232f3e;
+  color: #e9ebed;
+  border: 1px solid #3d5266;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* 思考中・ツール使用中 */
-.thinking { color: #808080; font-style: italic; }
+.thinking { color: #aab7b8; font-style: italic; }
+.thinking-progress { color: #aab7b8; font-style: italic; opacity: 0.8; }
 .tool-status { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
-.tool-status.active { color: #909090; }
-.tool-status.completed { color: #606060; }
+.tool-status.active { color: #aab7b8; }
+.tool-status.completed { color: #879596; }
 
 /* 入力フォーム */
 .form-wrapper {
-  background: #1a1a1a;
-  border-top: 1px solid #2d2d2d;
+  background: #232f3e;
+  border-top: 1px solid #3d5266;
   padding: 16px 24px;
 }
 .form {
@@ -108,27 +109,27 @@
 .input {
   flex: 1;
   padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #2d2d2d;
-  background: #0a0a0a;
-  color: #e0e0e0;
+  border-radius: 4px;
+  border: 1px solid #3d5266;
+  background: #16191f;
+  color: #ffffff;
   font-size: 0.95rem;
   outline: none;
 }
 .input:focus {
-  border-color: #404040;
-  box-shadow: 0 0 0 3px rgba(64, 64, 64, 0.2);
+  border-color: #ff9900;
+  box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
 }
 .button {
   padding: 12px 28px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-  color: #e0e0e0;
-  border: 1px solid #404040;
+  border-radius: 4px;
+  background: #ff9900;
+  color: #232f3e;
+  border: none;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-.button:hover { transform: translateY(-1px); background: linear-gradient(135deg, #3d3d3d 0%, #2a2a2a 100%); }
-.button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.button:hover { background: #ec7211; transform: translateY(-1px); }
+.button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; background: #ff9900; }
